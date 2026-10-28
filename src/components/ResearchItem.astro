@@ -1,0 +1,171 @@
+---
+// One research entry in the editorial research list.
+import AuthorList from './AuthorList.astro';
+import CopyButton from './CopyButton.astro';
+import Icon from './Icon.astro';
+import StatusBadge from './StatusBadge.astro';
+import { labelFor, researchTopics, researchTypes } from '@/data/taxonomy';
+import type { Research } from '@/lib/content';
+import { withBase } from '@/lib/url';
+
+interface Props {
+  entry: Research;
+  headingLevel?: 'h3' | 'h4';
+  /** Adds data attributes used by the filter script. */
+  filterable?: boolean;
+}
+
+const { entry, headingLevel: Heading = 'h3', filterable = false } = Astro.props;
+const d = entry.data;
+const href = withBase(`research/${entry.id}/`);
+const searchText = [d.title, d.summary, d.authors.join(' '), d.venue, d.submittedTo, ...d.topics.map((t) => labelFor(researchTopics, t))]
+  .filter(Boolean)
+  .join(' ')
+  .toLowerCase();
+const venueLine = [d.venue, d.publisher, d.pages && `pp. ${d.pages}`].filter(Boolean).join(', ');
+const doiLink = d.links.find((l) => l.kind === 'doi');
+---
+
+<li
+  class="research-item"
+  data-filter-item={filterable ? '' : undefined}
+  data-status={filterable ? d.status : undefined}
+  data-topic={filterable ? d.topics.join(' ') : undefined}
+  data-search={filterable ? searchText : undefined}
+  data-reveal
+>
+  <div class="meta">
+    <StatusBadge status={d.status} />
+    <span class="type">{labelFor(researchTypes, d.type)}</span>
+    {d.year && <span class="year mono">{d.year}</span>}
+  </div>
+
+  <div class="body">
+    <Heading class="title"><a href={href}>{d.title}</a></Heading>
+    {venueLine && <p class="venue">{venueLine}</p>}
+    {
+      d.submittedTo && (
+        <p class="venue">
+          Under review at <em>{d.submittedTo}</em>
+        </p>
+      )
+    }
+    {d.authors.length > 0 && <AuthorList authors={d.authors} />}
+    <p class="summary">{d.summary}</p>
+
+    <div class="foot">
+      <ul class="chip-list" aria-label="Topics">
+        {d.topics.map((t) => <li class="chip">{labelFor(researchTopics, t)}</li>)}
+      </ul>
+      <div class="actions">
+        {
+          doiLink && (
+            <a class="btn btn--small" href={doiLink.url} target="_blank" rel="noopener noreferrer">
+              DOI <Icon name="arrow-up-right" />
+              <span class="visually-hidden">for {d.shortTitle ?? d.title} (opens in a new tab)</span>
+            </a>
+          )
+        }
+        {d.citation && <CopyButton label="Copy citation" what="Citation" text={d.citation} />}
+        <a class="arrow-link" href={href}>
+          Details <Icon name="arrow-right" />
+          <span class="visually-hidden">: {d.shortTitle ?? d.title}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</li>
+
+<style>
+  .research-item {
+    display: grid;
+    grid-template-columns: minmax(9rem, 13rem) 1fr;
+    gap: var(--space-s) var(--space-l);
+    padding-block: var(--space-l);
+    border-top: 1px solid var(--line);
+  }
+
+  .meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .type {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .year {
+    color: var(--muted);
+  }
+
+  .body {
+    display: grid;
+    gap: 0.6rem;
+    max-width: 52rem;
+  }
+
+  .title {
+    font-size: var(--step-2);
+    line-height: 1.2;
+  }
+
+  .title a {
+    text-decoration: none;
+    background-image: linear-gradient(var(--accent), var(--accent));
+    background-size: 0% 1.5px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    transition:
+      background-size 450ms var(--ease-out),
+      color var(--dur);
+  }
+
+  .title a:hover {
+    background-size: 100% 1.5px;
+  }
+
+  .venue {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  .summary {
+    color: var(--ink-soft);
+    max-width: 70ch;
+  }
+
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs) var(--space-m);
+    margin-top: 0.35rem;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  @media (max-width: 44rem) {
+    .research-item {
+      grid-template-columns: 1fr;
+      gap: var(--space-xs);
+    }
+
+    .meta {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem 0.9rem;
+      padding-top: 0;
+    }
+  }
+</style>

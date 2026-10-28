@@ -1,0 +1,374 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AuthorList from '@/components/AuthorList.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import CitationBlock from '@/components/CitationBlock.astro';
+import ContactBand from '@/components/ContactBand.astro';
+import LinkList from '@/components/LinkList.astro';
+import Pager from '@/components/Pager.astro';
+import StatusBadge from '@/components/StatusBadge.astro';
+import { labelFor, researchStatuses, researchTopics, researchTypes } from '@/data/taxonomy';
+import { getProjects, getResearch, getSkills, type Research } from '@/lib/content';
+import { withBase } from '@/lib/url';
+
+export async function getStaticPaths() {
+  const all = await getResearch();
+  return all.map((entry, i) => ({
+    params: { id: entry.id },
+    props: { entry, prev: all[i - 1], next: all[i + 1] },
+  }));
+}
+
+interface Props {
+  entry: Research;
+  prev?: Research;
+  next?: Research;
+}
+
+const { entry, prev, next } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+const hasBody = Boolean(entry.body?.trim());
+
+const statusNote = researchStatuses.find((s) => s.id === d.status)?.note;
+const relatedProjects = (await getProjects()).filter((p) => p.data.relatedResearch.some((r) => r.id === entry.id));
+const relatedSkills = (await getSkills()).flatMap((group) =>
+  group.data.items.filter((item) => item.usedIn?.research.some((r) => r.id === entry.id)).map((item) => item.name),
+);
+const relatedResearch = (await getCollection('research'))
+  .filter((r) => r.id !== entry.id && r.data.topics.some((t) => d.topics.includes(t)))
+  .sort((a, b) => b.data.topics.filter((t) => d.topics.includes(t)).length - a.data.topics.filter((t) => d.topics.includes(t)).length)
+  .slice(0, 3);
+
+const description = `${labelFor(researchStatuses, d.status)}${d.submittedTo ? ` (${d.submittedTo})` : d.venueShort ? ` (${d.venueShort})` : ''}: ${d.summary}`;
+const resourceLinks = d.links.filter((l) => l.kind !== 'doi');
+
+const jsonLd =
+  d.status === 'published'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ScholarlyArticle',
+        headline: d.title,
+        author: d.authors.map((name) => ({ '@type': 'Person', name })),
+        datePublished: String(d.year),
+        publisher: d.publisher,
+        isPartOf: d.venue,
+        pagination: d.pages,
+        sameAs: d.doi ? `https://doi.org/${d.doi}` : undefined,
+      }
+    : undefined;
+---
+
+<BaseLayout title={d.shortTitle ?? d.title} description={description} type="article" jsonLd={jsonLd}>
+  <article>
+    <header class="detail-header">
+      <div class="wrap">
+        <Breadcrumbs items={[{ label: 'Research', href: 'research/' }]} current={d.shortTitle ?? d.title} />
+        <div class="meta enter" style="--enter-step:0">
+          <StatusBadge status={d.status} />
+          <span>{labelFor(researchTypes, d.type)}</span>
+          {d.year && <span class="mono">{d.year}</span>}
+        </div>
+        <h1 class="enter" style="--enter-step:1">{d.title}</h1>
+        {d.authors.length > 0 && <AuthorList class="enter" authors={d.authors} />}
+        <p class="lead enter" style="--enter-step:2">{d.summary}</p>
+      </div>
+    </header>
+
+    <div class="section">
+      <div class="wrap detail-grid">
+        <div class="detail-main">
+          {
+            d.citation && (
+              <section aria-labelledby="cite-title">
+                <h2 id="cite-title" class="visually-hidden">
+                  Citation
+                </h2>
+                <CitationBlock id={entry.id} citation={d.citation} bibtex={d.bibtex} />
+              </section>
+            )
+          }
+
+          {
+            hasBody && (
+              <section class="prose body" aria-label="Details">
+                <Content />
+              </section>
+            )
+          }
+
+          <section class="status-note" aria-labelledby="status-title">
+            <h2 id="status-title" class="eyebrow">Publication status</h2>
+            <p>
+              <StatusBadge status={d.status} />
+            </p>
+            <p>
+              {d.status === 'under-review' && (
+                <>
+                  This manuscript has been submitted to <em>{d.submittedTo}</em> and is under peer review. It has not been
+                  accepted.
+                </>
+              )}
+              {d.status === 'in-progress' && statusNote}
+              {(d.status === 'published' || d.status === 'accepted') && statusNote}
+            </p>
+          </section>
+
+          {
+            (relatedProjects.length > 0 || relatedResearch.length > 0) && (
+              <section class="related" aria-labelledby="related-title">
+                <h2 id="related-title">Related work</h2>
+                <ul>
+                  {relatedProjects.map((p) => (
+                    <li>
+                      <span class="eyebrow">Project</span>
+                      <a href={withBase(`projects/${p.id}/`)}>{p.data.title}</a>
+                    </li>
+                  ))}
+                  {relatedResearch.map((r) => (
+                    <li>
+                      <span class="eyebrow">{labelFor(researchStatuses, r.data.status)}</span>
+                      <a href={withBase(`research/${r.id}/`)}>{r.data.shortTitle ?? r.data.title}</a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )
+          }
+        </div>
+
+        <aside class="detail-aside" aria-label="Details">
+          <dl class="facts">
+            <div>
+              <dt>Status</dt>
+              <dd>{labelFor(researchStatuses, d.status)}</dd>
+            </div>
+            {
+              d.venue && (
+                <div>
+                  <dt>Venue</dt>
+                  <dd>{d.venue}</dd>
+                </div>
+              )
+            }
+            {
+              d.submittedTo && (
+                <div>
+                  <dt>Submitted to</dt>
+                  <dd>{d.submittedTo}</dd>
+                </div>
+              )
+            }
+            {
+              d.publisher && (
+                <div>
+                  <dt>Publisher</dt>
+                  <dd>{d.publisher}</dd>
+                </div>
+              )
+            }
+            {
+              d.year && (
+                <div>
+                  <dt>Year</dt>
+                  <dd>{d.year}</dd>
+                </div>
+              )
+            }
+            {
+              d.pages && (
+                <div>
+                  <dt>Pages</dt>
+                  <dd>{d.pages}</dd>
+                </div>
+              )
+            }
+            {
+              d.doi && (
+                <div>
+                  <dt>DOI</dt>
+                  <dd>
+                    <a href={`https://doi.org/${d.doi}`} target="_blank" rel="noopener noreferrer">
+                      {d.doi}
+                      <span class="visually-hidden">(opens in a new tab)</span>
+                    </a>
+                  </dd>
+                </div>
+              )
+            }
+            <div>
+              <dt>Topics</dt>
+              <dd>
+                <ul class="chip-list">
+                  {d.topics.map((t) => (
+                    <li>
+                      <a class="chip" href={withBase(`research/?topic=${t}`)}>
+                        {labelFor(researchTopics, t)}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+            {
+              relatedSkills.length > 0 && (
+                <div>
+                  <dt>Methods & skills</dt>
+                  <dd>{relatedSkills.join(', ')}</dd>
+                </div>
+              )
+            }
+          </dl>
+          {resourceLinks.length > 0 && <LinkList links={resourceLinks} context={d.shortTitle ?? d.title} />}
+        </aside>
+      </div>
+    </div>
+
+    <Pager
+      label="More research"
+      prev={prev && { href: `research/${prev.id}/`, title: prev.data.shortTitle ?? prev.data.title }}
+      next={next && { href: `research/${next.id}/`, title: next.data.shortTitle ?? next.data.title }}
+    />
+  </article>
+
+  <ContactBand
+    title="Interested in this work?"
+    text="I’m glad to talk about the methods, findings or collaboration. Email is the quickest way to reach me."
+  />
+</BaseLayout>
+
+<style>
+  .detail-header {
+    padding-block: var(--space-l) var(--space-xl);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .detail-header .wrap {
+    display: grid;
+    gap: var(--space-s);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.1rem;
+    margin-top: var(--space-m);
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  h1 {
+    font-size: var(--step-4);
+    max-width: 26ch;
+  }
+
+  .lead {
+    max-width: 64ch;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(16rem, 1fr);
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  .detail-main {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  .status-note {
+    display: grid;
+    gap: 0.6rem;
+    padding-left: var(--space-m);
+    border-left: 2px solid var(--line-strong);
+    max-width: 60ch;
+  }
+
+  .status-note p {
+    color: var(--ink-soft);
+  }
+
+  .related h2 {
+    font-size: var(--step-2);
+    margin-bottom: var(--space-s);
+  }
+
+  .related ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .related li {
+    display: grid;
+    gap: 0.2rem;
+    padding-block: var(--space-s);
+    border-top: 1px solid var(--line);
+  }
+
+  .related a {
+    font-family: var(--font-display-stack);
+    font-size: var(--step-1);
+    line-height: 1.3;
+    text-decoration: none;
+  }
+
+  .detail-aside {
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+    display: grid;
+    gap: var(--space-m);
+  }
+
+  .facts {
+    display: grid;
+    gap: var(--space-s);
+    padding: var(--space-m);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--bg-elev);
+    font-size: var(--step--1);
+  }
+
+  .facts dt {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .facts dd {
+    margin-top: 0.2rem;
+    overflow-wrap: anywhere;
+  }
+
+  .facts .chip-list {
+    margin-top: 0.35rem;
+  }
+
+  a.chip {
+    text-decoration: none;
+    min-height: 2rem;
+  }
+
+  a.chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+
+  @media (max-width: 56rem) {
+    .detail-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-aside {
+      position: static;
+    }
+  }
+
+</style>

@@ -1,0 +1,133 @@
+---
+import Icon from './Icon.astro';
+import Monogram from './Monogram.astro';
+import { navigation, writingNavItem } from '@/data/navigation';
+import { profile } from '@/data/profile';
+import { getWriting } from '@/lib/content';
+import { withBase } from '@/lib/url';
+
+const hasWriting = (await getWriting()).length > 0;
+const links = hasWriting ? [...navigation, writingNavItem] : navigation;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div class="footer-id">
+      <Monogram size={44} />
+      <p class="footer-name">{profile.name}</p>
+      <p class="muted">{profile.focus}.</p>
+    </div>
+
+    <nav aria-label="Footer">
+      <p class="eyebrow">Explore</p>
+      <ul>
+        {links.map((item) => <li><a href={withBase(item.href)}>{item.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <div>
+      <p class="eyebrow">Get in touch</p>
+      <ul>
+        <li>
+          <a href={`mailto:${profile.email}`}><Icon name="mail" /> Email</a>
+        </li>
+        {
+          profile.links.map((link) => (
+            <li>
+              <a href={link.url} rel="noopener noreferrer me" target="_blank">
+                <Icon name={link.icon} /> {link.label}
+                <span class="visually-hidden">(opens in a new tab)</span>
+              </a>
+            </li>
+          ))
+        }
+        {
+          profile.cv && (
+            <li>
+              <a href={withBase(profile.cv.path)} download>
+                <Icon name="download" /> CV (PDF)
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </div>
+  </div>
+
+  <div class="wrap footer-base">
+    <p class="muted">© {year} {profile.name}</p>
+    <a class="arrow-link" href="#top">Back to top <Icon name="arrow-up" /></a>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: auto;
+    border-top: 1px solid var(--line);
+    background: var(--bg-sunk);
+    font-size: var(--step--1);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: var(--space-l);
+    padding-block: var(--space-xl);
+  }
+
+  .footer-id {
+    display: grid;
+    gap: 0.4rem;
+    align-content: start;
+    max-width: 30ch;
+  }
+
+  .footer-name {
+    font-family: var(--font-display-stack);
+    font-size: var(--step-2);
+    line-height: 1.1;
+    margin-top: 0.6rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 0.6rem;
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  ul a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+
+  ul a:hover {
+    color: var(--accent);
+  }
+
+  .footer-base {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-s);
+    padding-block: var(--space-s) var(--space-m);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 48rem) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .footer-id {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

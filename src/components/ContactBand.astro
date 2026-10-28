@@ -1,0 +1,145 @@
+---
+// Closing call to action used on the home page and detail pages.
+import CopyButton from './CopyButton.astro';
+import Icon from './Icon.astro';
+import AvailabilityBadge from './AvailabilityBadge.astro';
+import { profile } from '@/data/profile';
+import { withBase } from '@/lib/url';
+
+interface Props {
+  title?: string;
+  text?: string;
+}
+
+const {
+  title = 'Let’s talk PhD opportunities, research or collaboration.',
+  text = 'Email is the best way to reach me. I’m happy to share more detail about any project or manuscript listed here.',
+} = Astro.props;
+---
+
+<section class="contact-band" aria-labelledby="contact-band-title">
+  <div class="wrap band-grid" data-reveal>
+    <div>
+      <p class="eyebrow eyebrow--accent">Contact</p>
+      <AvailabilityBadge class="band-availability" />
+      <h2 id="contact-band-title">{title}</h2>
+      <p class="band-text">{text}</p>
+    </div>
+    <div class="band-actions">
+      <a class="email" href={`mailto:${profile.email}`}>
+        <Icon name="mail" size={22} />
+        <span>{profile.email}</span>
+      </a>
+      <div class="row">
+        <CopyButton label="Copy email" what="Email address" text={profile.email} />
+        {
+          profile.links.map((link) => (
+            <a class="btn btn--small" href={link.url} target="_blank" rel="noopener noreferrer">
+              <Icon name={link.icon} /> {link.label}
+              <span class="visually-hidden">(opens in a new tab)</span>
+            </a>
+          ))
+        }
+        {
+          profile.cv && (
+            <a class="btn btn--small" href={withBase(profile.cv.path)} download>
+              <Icon name="download" /> CV
+            </a>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact-band {
+    position: relative;
+    padding-block: var(--space-2xl);
+    background: var(--ink);
+    color: var(--bg);
+    overflow: hidden;
+    isolation: isolate;
+    /* The band inverts the palette, so flip the accent to keep AA contrast. */
+    --accent: light-dark(#86dfc0, #0a6e50);
+  }
+
+  .contact-band::before {
+    content: '';
+    position: absolute;
+    inset: -40% -10% auto auto;
+    width: 60vmax;
+    height: 60vmax;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--bg) 18%, transparent);
+    box-shadow:
+      0 0 0 6vmax color-mix(in srgb, var(--bg) 3%, transparent),
+      0 0 0 12vmax color-mix(in srgb, var(--bg) 2%, transparent);
+    z-index: -1;
+  }
+
+  .band-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--space-l);
+    align-items: end;
+  }
+
+  :global(.band-availability) {
+    margin-top: var(--space-s);
+  }
+
+  h2 {
+    font-size: var(--step-4);
+    margin-top: var(--space-xs);
+    max-width: 21ch;
+  }
+
+  .band-text {
+    margin-top: var(--space-s);
+    max-width: 50ch;
+    opacity: 0.85;
+  }
+
+  .band-actions {
+    display: grid;
+    gap: var(--space-s);
+  }
+
+  .email {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: var(--font-display-stack);
+    font-size: var(--step-1);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    min-height: 2.75rem;
+  }
+
+  .email:hover {
+    color: var(--accent);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .row :global(.btn) {
+    --btn-fg: var(--bg);
+    --btn-border: color-mix(in srgb, var(--bg) 35%, transparent);
+    color: var(--bg);
+  }
+
+  .row :global(.btn:hover) {
+    --btn-border: var(--bg);
+  }
+
+  @media (max-width: 52rem) {
+    .band-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,186 @@
+---
+// Filter UI for a [data-filter-root] list. Renders hidden; the filter script
+// reveals it, so visitors without JavaScript simply see the full list.
+import Icon from './Icon.astro';
+
+interface Facet {
+  name: string;
+  legend: string;
+  /** Number of items in the whole list (shown on "All"). */
+  total: number;
+  options: { id: string; label: string; count: number }[];
+}
+
+interface Props {
+  facets: Facet[];
+  /** Label for the search box; omit to hide search. */
+  searchLabel?: string;
+  searchPlaceholder?: string;
+}
+
+const { facets, searchLabel, searchPlaceholder } = Astro.props;
+---
+
+<form class="filters" data-filter-controls hidden aria-label="Filter the list">
+  {
+    searchLabel && (
+      <div class="search">
+        <label for="filter-search" class="eyebrow">
+          {searchLabel}
+        </label>
+        <div class="search-field">
+          <Icon name="search" size={18} />
+          <input
+            id="filter-search"
+            type="search"
+            name="q"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder={searchPlaceholder}
+            data-filter-search
+          />
+        </div>
+      </div>
+    )
+  }
+  {
+    facets.map((facet) => (
+      <fieldset data-facet={facet.name}>
+        <legend class="eyebrow">{facet.legend}</legend>
+        <div class="options">
+          <label class="option">
+            <input type="radio" name={facet.name} value="all" checked />
+            <span>
+              All <span class="n">{facet.total}</span>
+            </span>
+          </label>
+          {facet.options.map((option) => (
+            <label class="option">
+              <input type="radio" name={facet.name} value={option.id} />
+              <span>
+                {option.label} <span class="n">{option.count}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    ))
+  }
+</form>
+
+<style>
+  .filters {
+    display: grid;
+    gap: var(--space-m);
+    padding: var(--space-m);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--bg-elev);
+  }
+
+  fieldset {
+    border: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  legend,
+  .search label {
+    display: block;
+    margin-bottom: 0.55rem;
+    padding: 0;
+  }
+
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .option {
+    position: relative;
+  }
+
+  .option input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .option > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.6rem;
+    padding: 0.4rem 0.95rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--ink-soft);
+    transition:
+      background-color var(--dur),
+      border-color var(--dur),
+      color var(--dur);
+  }
+
+  .option:hover > span {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .option input:checked + span {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+
+  .option input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .n {
+    font-family: var(--font-mono-stack);
+    font-size: 0.78em;
+    opacity: 0.75;
+  }
+
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-inline: 0.9rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--muted);
+    transition: border-color var(--dur);
+  }
+
+  .search-field:focus-within {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .search-field input {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.875rem;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    outline: none;
+  }
+
+  .search-field input::placeholder {
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  import '@/scripts/filters';
+</script>

@@ -1,0 +1,75 @@
+[
+  {
+    "id": "deans-vc-list",
+    "title": "Dean’s List and Vice Chancellor’s List",
+    "organiser": "BRAC University",
+    "category": "academic",
+    "start": "2023-01",
+    "date": "2026-09",
+    "order": 1
+  },
+  {
+    "id": "merit-scholarship",
+    "title": "Merit-Based Academic Scholarship",
+    "organiser": "BRAC University",
+    "category": "academic",
+    "start": "2023-01",
+    "date": "2026-09",
+    "order": 2
+  },
+  {
+    "id": "excelerate",
+    "title": "EXCELERATE National Excel Competition",
+    "result": "Top 6 Finalist",
+    "organiser": "FINACT, BRAC University",
+    "category": "competition",
+    "date": "2025-12",
+    "order": 1
+  },
+  {
+    "id": "cse471-demo",
+    "title": "CSE471 Project Demonstration",
+    "result": "1st Runner-Up",
+    "organiser": "BRAC University Computer Club",
+    "category": "competition",
+    "date": "2025-12",
+    "order": 2
+  },
+  {
+    "id": "robosoccer-traction",
+    "title": "RoboSoccer Competition — TRACTION",
+    "result": "Semi-Finalist",
+    "organiser": "Robotics Club of BRAC University",
+    "category": "competition",
+    "date": "2025-04",
+    "order": 3
+  },
+  {
+    "id": "robosoccer-techspectra",
+    "title": "RoboSoccer Competition — TechSpectra",
+    "result": "Second Runner-Up",
+    "organiser": "Robotics Club of BRAC University",
+    "category": "competition",
+    "date": "2024-05",
+    "order": 4
+  },
+  {
+    "id": "hult-prize",
+    "title": "Hult Prize On-Campus Round",
+    "result": "Semi-Finalist",
+    "organiser": "BRAC University",
+    "category": "competition",
+    "date": "2023-02",
+    "order": 5
+  },
+  {
+    "id": "duke-of-edinburgh",
+    "title": "The Duke of Edinburgh’s International Award",
+    "result": "Bronze Level Award",
+    "organiser": "The Duke of Edinburgh’s International Award",
+    "category": "personal-development",
+    "start": "2023-05",
+    "date": "2024-03",
+    "order": 1
+  }
+]

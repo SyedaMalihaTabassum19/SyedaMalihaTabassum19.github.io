@@ -1,0 +1,311 @@
+---
+import Icon from './Icon.astro';
+import Monogram from './Monogram.astro';
+import { navigation, writingNavItem } from '@/data/navigation';
+import { profile } from '@/data/profile';
+import { getWriting } from '@/lib/content';
+import { stripBase, withBase } from '@/lib/url';
+
+const current = stripBase(Astro.url.pathname);
+const items = (await getWriting()).length > 0 ? [...navigation.slice(0, -1), writingNavItem, navigation.at(-1)!] : navigation;
+const isCurrent = (href: string) => current === `/${href}` || current.startsWith(`/${href}`);
+---
+
+<header class="site-header" data-header>
+  <div class="wrap header-inner">
+    <a class="brand" href={withBase('/')} aria-label={`${profile.name} — home`}>
+      <Monogram size={38} />
+      <span class="brand-name">{profile.name}</span>
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="site-nav"
+      data-menu-toggle
+      hidden
+    >
+      <Icon name="menu" size={22} class="when-closed" />
+      <Icon name="close" size={22} class="when-open" />
+      <span class="menu-label">Menu</span>
+    </button>
+
+    <nav id="site-nav" class="site-nav" aria-label="Main" data-menu>
+      <ul>
+        {
+          items.map((item, i) => (
+            <li style={`--i:${i}`}>
+              <a href={withBase(item.href)} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <button class="theme-toggle" type="button" data-theme-toggle hidden>
+      <Icon name="moon" size={19} class="to-dark" />
+      <Icon name="sun" size={19} class="to-light" />
+      <span class="visually-hidden" data-theme-label>Switch theme</span>
+    </button>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur), background-color var(--dur);
+  }
+
+  :global(.is-scrolled) .site-header {
+    border-bottom-color: var(--line);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+    min-height: var(--header-h);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    text-decoration: none;
+    margin-right: auto;
+    min-height: 2.75rem;
+  }
+
+  .brand:hover {
+    color: var(--ink);
+  }
+
+  .brand-name {
+    font-family: var(--font-display-stack);
+    font-size: 1.12rem;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .site-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-nav a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-inline: 0.7rem;
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+
+  .site-nav a::after {
+    content: '';
+    position: absolute;
+    left: 0.7rem;
+    right: 0.7rem;
+    bottom: 0.55rem;
+    height: 1.5px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .site-nav a:hover {
+    color: var(--ink);
+  }
+
+  .site-nav a:hover::after,
+  .site-nav a[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
+  .site-nav a[aria-current='page'] {
+    color: var(--ink);
+  }
+
+  .theme-toggle,
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-elev);
+    color: var(--ink);
+    transition: border-color var(--dur), transform var(--dur) var(--ease-out);
+  }
+
+  .theme-toggle:hover,
+  .menu-toggle:hover {
+    border-color: var(--line-strong);
+  }
+
+  .theme-toggle :global(svg) {
+    transition: transform 500ms var(--ease-out);
+  }
+
+  .theme-toggle:hover :global(svg) {
+    transform: rotate(-20deg);
+  }
+
+  /* Show the icon of the theme you will switch TO. */
+  :global([data-effective-theme='dark']) .theme-toggle :global(.to-dark),
+  :global([data-effective-theme='light']) .theme-toggle :global(.to-light),
+  :global(:root:not([data-effective-theme])) .theme-toggle :global(.to-light) {
+    display: none;
+  }
+
+  .menu-toggle {
+    padding-inline: 0.9rem;
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  .menu-toggle :global(.when-open),
+  .menu-toggle[aria-expanded='true'] :global(.when-closed) {
+    display: none;
+  }
+
+  .menu-toggle[aria-expanded='true'] :global(.when-open) {
+    display: block;
+  }
+
+  /* ── Small screens ─────────────────────────────────────────────────── */
+  @media (max-width: 66rem) {
+    .header-inner {
+      flex-wrap: wrap;
+    }
+
+    /* Without JavaScript the nav simply wraps onto its own row. */
+    .site-nav {
+      order: 3;
+      width: 100%;
+      padding-bottom: 0.5rem;
+    }
+
+    .site-nav a {
+      padding-inline: 0.55rem;
+    }
+
+    .site-nav a::after {
+      left: 0.55rem;
+      right: 0.55rem;
+    }
+
+    /* With JavaScript it becomes a disclosure panel. */
+    :global(.js) .header-inner {
+      flex-wrap: nowrap;
+    }
+
+    :global(.js) .site-nav {
+      position: fixed;
+      inset: var(--header-h) 0 0 0;
+      width: auto;
+      padding: var(--space-l) var(--gutter);
+      background: var(--bg);
+      border-top: 1px solid var(--line);
+      overflow-y: auto;
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition:
+        opacity var(--dur),
+        transform var(--dur) var(--ease-out),
+        visibility 0s linear var(--dur);
+    }
+
+    :global(.js) .site-nav[data-open] {
+      visibility: visible;
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity var(--dur),
+        transform var(--dur) var(--ease-out);
+    }
+
+    :global(.js) .site-nav ul {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    :global(.js) .site-nav li {
+      border-bottom: 1px solid var(--line);
+    }
+
+    :global(.js) .site-nav a {
+      width: 100%;
+      min-height: 3.5rem;
+      padding-inline: 0;
+      font-family: var(--font-display-stack);
+      font-size: var(--step-2);
+      color: var(--ink);
+    }
+
+    :global(.js) .site-nav a::after {
+      display: none;
+    }
+
+    :global(.js) .site-nav a[aria-current='page'] {
+      color: var(--accent);
+    }
+
+    :global(.js) .site-nav a[aria-current='page']::before {
+      content: '→';
+      margin-right: 0.6rem;
+      font-family: var(--font-body-stack);
+      font-size: 0.8em;
+    }
+  }
+
+  @media (max-width: 66rem) and (prefers-reduced-motion: no-preference) {
+    :global(.js) .site-nav[data-open] li {
+      animation: nav-in 420ms var(--ease-out) both;
+      animation-delay: calc(var(--i) * 35ms);
+    }
+
+    @keyframes nav-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+    }
+  }
+
+  @media (min-width: 66.0625rem) {
+    .menu-toggle {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 26rem) {
+    .brand-name {
+      font-size: 0.98rem;
+    }
+
+    .menu-label {
+      display: none;
+    }
+  }
+</style>

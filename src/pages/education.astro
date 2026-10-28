@@ -1,0 +1,250 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import ContactBand from '@/components/ContactBand.astro';
+import { awardCategories } from '@/data/taxonomy';
+import { getAwards, getEducation } from '@/lib/content';
+import { formatMonth, formatRange } from '@/lib/format';
+
+const education = await getEducation();
+const awards = await getAwards();
+const groups = awardCategories
+  .map((c) => ({ ...c, items: awards.filter((a) => a.data.category === c.id) }))
+  .filter((g) => g.items.length > 0);
+---
+
+<BaseLayout
+  title="Education & Recognition"
+  description="Education, academic distinctions, scholarships and competition results of Syeda Maliha Tabassum — B.Sc. in Computer Science and Engineering, BRAC University (CGPA 3.93/4.00)."
+>
+  <PageHeader
+    eyebrow="Education & recognition"
+    title="Education, distinctions and competitions"
+    lead="Academic qualifications and results, scholarships and the competitions I’ve taken part in."
+  />
+
+  <section class="section" aria-labelledby="education-title">
+    <div class="wrap">
+      <h2 id="education-title" class="section-label">Education</h2>
+      <ol class="ledger">
+        {
+          education.map((e) => (
+            <li class="degree" data-reveal>
+              <div class="degree-text">
+                <span class="mono muted">{formatRange(e.data.start, e.data.end)}</span>
+                <h3>{e.data.qualification}</h3>
+                <p>{e.data.institution}</p>
+              </div>
+              {e.data.result && (
+                <p class="result">
+                  <span class="result-label">{e.data.result.label}</span>
+                  <span class="result-value">{e.data.result.value}</span>
+                  <span class="result-scale">out of {e.data.result.scale}</span>
+                </p>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--sunk" aria-labelledby="awards-title">
+    <div class="wrap">
+      <h2 id="awards-title" class="section-label">Honours & awards</h2>
+      <div class="award-groups">
+        {
+          groups.map((g) => (
+            <section class={`award-group award-group--${g.id}`} aria-labelledby={`awards-${g.id}`} data-reveal>
+              <h3 id={`awards-${g.id}`}>{g.label}</h3>
+              <ol class="awards">
+                {g.items.map((a) => (
+                  <li>
+                    <span class="award-date mono">
+                      {a.data.start ? formatRange(a.data.start, a.data.date) : formatMonth(a.data.date)}
+                    </span>
+                    <span class="award-body">
+                      {a.data.result && <span class="award-result">{a.data.result}</span>}
+                      <span class="award-title">{a.data.title}</span>
+                      <span class="award-org">{a.data.organiser}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <ContactBand />
+</BaseLayout>
+
+<style>
+  .section-label {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: var(--space-m);
+  }
+
+  .ledger {
+    list-style: none;
+    padding: 0;
+  }
+
+  .degree {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-m) var(--space-xl);
+    align-items: end;
+    padding-block: var(--space-l);
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .degree:last-child {
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .degree-text {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .degree h3 {
+    font-size: var(--step-3);
+  }
+
+  .degree p {
+    color: var(--ink-soft);
+    font-size: var(--step-1);
+  }
+
+  .result {
+    display: grid;
+    justify-items: end;
+    text-align: right;
+  }
+
+  .result-label {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .result-value {
+    font-family: var(--font-display-stack);
+    font-size: clamp(3rem, 2rem + 4vw, 5.5rem);
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+  }
+
+  .result-scale {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  .award-groups {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  /* Competitions is the longest list: wide column; the rest stack beside it. */
+  .award-group--competition {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .award-group--academic {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .award-group--personal-development {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .award-group h3 {
+    font-size: var(--step-2);
+    margin-bottom: var(--space-s);
+  }
+
+  .awards {
+    list-style: none;
+    padding: 0;
+  }
+
+  .awards li {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: var(--space-s);
+    padding-block: var(--space-s);
+    border-top: 1px solid var(--line);
+  }
+
+  .award-date {
+    color: var(--muted);
+    padding-top: 0.15rem;
+  }
+
+  .award-body {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .award-result {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .award-title {
+    font-family: var(--font-display-stack);
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .award-org {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 52rem) {
+    .award-groups {
+      grid-template-columns: 1fr;
+    }
+
+    .award-group {
+      grid-row: auto !important;
+      grid-column: auto !important;
+    }
+  }
+
+  @media (max-width: 36rem) {
+    .degree {
+      grid-template-columns: 1fr;
+    }
+
+    .result {
+      justify-items: start;
+      text-align: left;
+    }
+
+    .awards li {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+  }
+</style>

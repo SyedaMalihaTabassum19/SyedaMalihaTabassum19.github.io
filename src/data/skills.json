@@ -1,0 +1,96 @@
+[
+  {
+    "id": "machine-learning",
+    "label": "Machine Learning & AI",
+    "description": "Modelling, evaluation and uncertainty — the core of the research work.",
+    "order": 1,
+    "items": [
+      { "name": "PyTorch" },
+      { "name": "Scikit-learn" },
+      { "name": "Deep Learning" },
+      { "name": "Vision Transformers" },
+      { "name": "Multimodal Learning", "usedIn": { "research": ["lumenaa", "urban-road-risk-prediction"] } },
+      { "name": "Feature Engineering", "usedIn": { "projects": ["smoking-behavior-prediction"], "research": ["urban-road-risk-prediction"] } },
+      { "name": "Model Evaluation", "usedIn": { "projects": ["smoking-behavior-prediction"], "research": ["trustworthy-autism-classification"] } },
+      { "name": "Uncertainty-Aware Modeling", "usedIn": { "research": ["camdet", "urban-road-risk-prediction"] } },
+      { "name": "Statistical Modeling" },
+      { "name": "Optimization Techniques" },
+      { "name": "Data-Driven Decision-Making" }
+    ]
+  },
+  {
+    "id": "computer-vision",
+    "label": "Computer Vision & Human-Centered AI",
+    "description": "Perception for people and physical environments.",
+    "order": 2,
+    "items": [
+      { "name": "YOLO" },
+      { "name": "OpenCV" },
+      { "name": "MediaPipe" },
+      { "name": "Pose Estimation", "usedIn": { "research": ["urban-road-risk-prediction"] } },
+      { "name": "Vision–Language Pipelines", "usedIn": { "research": ["lumenaa"] } },
+      { "name": "Assistive AI Systems", "usedIn": { "research": ["lumenaa"], "experience": ["dristee-research-assistant"] } },
+      { "name": "Human Activity and Gesture Recognition", "usedIn": { "research": ["gesture-virtual-keyboard-mouse", "vision-fall-detection-review"] } }
+    ]
+  },
+  {
+    "id": "agentic-systems",
+    "label": "Agentic Systems & Decision Support",
+    "description": "Systems that plan, perceive and act under latency constraints.",
+    "order": 3,
+    "items": [
+      { "name": "Agentic AI Systems", "usedIn": { "research": ["lumenaa"] } },
+      { "name": "Sequential Decision Pipelines" },
+      { "name": "Human-Centered Sensing" },
+      { "name": "Edge–Cloud AI Architectures", "usedIn": { "research": ["lumenaa"] } },
+      { "name": "Low-Latency Inference", "usedIn": { "research": ["lumenaa", "camdet"] } }
+    ]
+  },
+  {
+    "id": "embedded-robotics",
+    "label": "Automation, Robotics & Embedded Systems",
+    "description": "Hardware, sensing and the networks that connect them.",
+    "order": 4,
+    "items": [
+      { "name": "Infrastructure Automation", "usedIn": { "experience": ["grameenphone-nextern"] } },
+      { "name": "Embedded Systems", "usedIn": { "projects": ["arduino-health-monitoring", "aruco-service-bot"] } },
+      { "name": "ESP32", "usedIn": { "projects": ["aruco-service-bot"] } },
+      { "name": "Arduino", "usedIn": { "projects": ["arduino-health-monitoring"] } },
+      { "name": "Sensor Fusion", "usedIn": { "projects": ["arduino-health-monitoring"] } },
+      { "name": "Communication Networks", "usedIn": { "experience": ["mongoltori-mars-rover"] } },
+      { "name": "GSM/GPS", "usedIn": { "projects": ["arduino-health-monitoring"] } },
+      { "name": "I2C", "usedIn": { "projects": ["arduino-health-monitoring"] } },
+      { "name": "HAM Radio" }
+    ]
+  },
+  {
+    "id": "programming",
+    "label": "Programming & Algorithms",
+    "description": "Languages and foundations used across research and engineering.",
+    "order": 5,
+    "items": [
+      { "name": "Python" },
+      { "name": "C/C++" },
+      { "name": "Java" },
+      { "name": "SQL" },
+      { "name": "JavaScript" },
+      { "name": "Data Structures", "usedIn": { "experience": ["data-structures-ta"] } },
+      { "name": "Algorithmic Problem Solving" }
+    ]
+  },
+  {
+    "id": "tools",
+    "label": "Tools & Development",
+    "description": "Everyday tooling for building, writing and shipping.",
+    "order": 6,
+    "items": [
+      { "name": "Git" },
+      { "name": "Linux" },
+      { "name": "LaTeX" },
+      { "name": "OpenGL" },
+      { "name": "MERN Stack", "usedIn": { "projects": ["weheal"] } },
+      { "name": "REST APIs" },
+      { "name": "Technical Documentation", "usedIn": { "experience": ["dristee-research-assistant"] } }
+    ]
+  }
+]

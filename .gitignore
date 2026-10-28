@@ -1,0 +1,24 @@
+# Build output
+dist/
+dist-*/
+.astro/
+
+# Dependencies
+node_modules/
+
+# Logs and local env
+npm-debug.log*
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# ── PRIVATE: never commit these ─────────────────────────────────────────────
+# The original CV contains a phone number and referees' contact details.
+# Only the redacted copy in public/cv/ is meant to be published.
+/Maliha_Updated_Resume___PHD.pdf
+/private/

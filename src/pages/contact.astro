@@ -1,0 +1,158 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import CopyButton from '@/components/CopyButton.astro';
+import Icon from '@/components/Icon.astro';
+import AvailabilityBadge from '@/components/AvailabilityBadge.astro';
+import { profile } from '@/data/profile';
+import { withBase } from '@/lib/url';
+---
+
+<BaseLayout
+  title="Contact"
+  description="Contact Syeda Maliha Tabassum — open to PhD positions for Fall 2027 — by email, LinkedIn or GitHub, or download her CV."
+>
+  <PageHeader
+    eyebrow="Contact"
+    title="Get in touch"
+    lead="For PhD supervision, research conversations, collaboration or roles, email is the best way to reach me."
+  >
+    <AvailabilityBadge style="margin-top: var(--space-m)" />
+  </PageHeader>
+
+  <section class="section">
+    <div class="wrap contact-grid">
+      <div class="primary" data-reveal>
+        <p class="eyebrow">Email</p>
+        <a class="email" href={`mailto:${profile.email}`}>{profile.email}</a>
+        <div class="actions">
+          <a class="btn btn--primary" href={`mailto:${profile.email}`}>
+            <Icon name="mail" /> Write an email
+          </a>
+          <CopyButton label="Copy email address" what="Email address" text={profile.email} />
+        </div>
+      </div>
+
+      <ul class="channels" data-reveal>
+        {
+          profile.links.map((link) => (
+            <li>
+              <a href={link.url} target="_blank" rel="noopener noreferrer me">
+                <Icon name={link.icon} size={24} />
+                <span>
+                  <span class="channel-label">{link.label}</span>
+                  <span class="channel-handle">{link.handle}</span>
+                </span>
+                <Icon name="arrow-up-right" class="go" />
+                <span class="visually-hidden">(opens in a new tab)</span>
+              </a>
+            </li>
+          ))
+        }
+        {
+          profile.cv && (
+            <li>
+              <a href={withBase(profile.cv.path)} download>
+                <Icon name="document" size={24} />
+                <span>
+                  <span class="channel-label">Curriculum vitae</span>
+                  <span class="channel-handle">PDF · public version</span>
+                </span>
+                <Icon name="download" class="go" />
+              </a>
+            </li>
+          )
+        }
+        <li class="static">
+          <Icon name="pin" size={24} />
+          <span>
+            <span class="channel-label">Based in</span>
+            <span class="channel-handle">{profile.location}</span>
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  .primary {
+    display: grid;
+    gap: var(--space-s);
+  }
+
+  .email {
+    font-family: var(--font-display-stack);
+    font-size: clamp(1.35rem, 0.8rem + 2.6vw, 2.6rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+    text-decoration-color: var(--accent);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: var(--space-xs);
+  }
+
+  .channels {
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .channels li {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .channels a,
+  .channels .static {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+    min-height: 4.5rem;
+    padding-block: var(--space-xs);
+    text-decoration: none;
+  }
+
+  .channels a > span,
+  .channels .static > span {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .channel-label {
+    font-weight: 600;
+  }
+
+  .channel-handle {
+    font-size: var(--step--1);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  .channels :global(.go) {
+    color: var(--muted);
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .channels a:hover :global(.go) {
+    color: var(--accent);
+    transform: translate(2px, -2px);
+  }
+
+  @media (max-width: 52rem) {
+    .contact-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

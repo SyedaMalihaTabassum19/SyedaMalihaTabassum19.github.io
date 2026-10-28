@@ -1,0 +1,739 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HeroArt from '@/components/HeroArt.astro';
+import Icon from '@/components/Icon.astro';
+import StatusBadge from '@/components/StatusBadge.astro';
+import AuthorList from '@/components/AuthorList.astro';
+import CopyButton from '@/components/CopyButton.astro';
+import ProjectCover from '@/components/ProjectCover.astro';
+import ContactBand from '@/components/ContactBand.astro';
+import AvailabilityBadge from '@/components/AvailabilityBadge.astro';
+import { profile } from '@/data/profile';
+import { researchTopics, labelFor, projectCategories, experienceKinds } from '@/data/taxonomy';
+import { getResearch, getProjects, getExperience, getEducation } from '@/lib/content';
+import { formatRange } from '@/lib/format';
+import { withBase } from '@/lib/url';
+
+const research = await getResearch();
+const projects = await getProjects();
+const experience = await getExperience();
+const [degree] = await getEducation();
+
+const count = (status: string) => research.filter((r) => r.data.status === status).length;
+const published = research.filter((r) => r.data.status === 'published');
+const spotlight = published.find((r) => r.data.featured) ?? published[0];
+const underReview = research.filter((r) => r.data.status === 'under-review' && r.data.featured).slice(0, 3);
+const ongoing = research.filter((r) => r.data.status === 'in-progress' && r.data.featured).slice(0, 1);
+const featuredProjects = projects.filter((p) => p.data.featured).slice(0, 3);
+
+const themeIds = ['reliable-ai', 'perception', 'health', 'assistive'] as const;
+const themes = themeIds.map((id) => ({
+  ...researchTopics.find((t) => t.id === id)!,
+  count: research.filter((r) => r.data.topics.includes(id)).length,
+}));
+
+const facts = [
+  count('published') && {
+    value: String(count('published')),
+    label: count('published') === 1 ? 'peer-reviewed paper' : 'peer-reviewed papers',
+    note: spotlight ? [spotlight.data.publisher, spotlight.data.venueShort].filter(Boolean).join(' · ') : undefined,
+  },
+  count('under-review') && { value: String(count('under-review')), label: 'manuscripts under review' },
+  count('in-progress') && { value: String(count('in-progress')), label: 'ongoing research projects' },
+  degree?.data.result && {
+    value: degree.data.result.value,
+    label: `${degree.data.result.label} out of ${degree.data.result.scale}`,
+    note: degree.data.institution,
+  },
+].filter(Boolean) as { value: string; label: string; note?: string }[];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  jobTitle: profile.headline,
+  description: profile.description,
+  email: `mailto:${profile.email}`,
+  address: { '@type': 'PostalAddress', addressLocality: 'Dhaka', addressCountry: 'BD' },
+  alumniOf: { '@type': 'CollegeOrUniversity', name: 'BRAC University' },
+  knowsAbout: profile.interests,
+  sameAs: profile.links.map((l) => l.url),
+};
+---
+
+<BaseLayout type="profile" jsonLd={jsonLd}>
+  <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+  <section class="hero" aria-labelledby="hero-name">
+    <div class="wrap hero-grid">
+      <div class="hero-text">
+        <AvailabilityBadge class="enter hero-availability" style="--enter-step:0" />
+        <p class="eyebrow eyebrow--accent enter" style="--enter-step:0">{profile.headline}</p>
+        <h1 id="hero-name" class="hero-name enter" style="--enter-step:1">
+          <span>Syeda Maliha</span>
+          <em>Tabassum</em>
+        </h1>
+        <p class="hero-focus enter" style="--enter-step:2">{profile.focus}.</p>
+        <p class="hero-intro enter" style="--enter-step:3">{profile.intro}</p>
+        <div class="hero-actions enter" style="--enter-step:4">
+          <a class="btn btn--primary" href={withBase('research/')}>
+            Explore research <Icon name="arrow-right" />
+          </a>
+          <a class="btn" href={withBase('projects/')}>View projects</a>
+          {
+            profile.cv && (
+              <a class="btn btn--quiet" href={withBase(profile.cv.path)} download>
+                <Icon name="download" /> Download CV
+              </a>
+            )
+          }
+        </div>
+      </div>
+      <HeroArt class="hero-visual" />
+    </div>
+
+    <div class="wrap">
+      <dl class="facts enter" style="--enter-step:5">
+        {
+          facts.map((f) => (
+            <div class="fact">
+              <dt class="visually-hidden">{f.label}</dt>
+              <dd>
+                <span class="fact-value">{f.value}</span>
+                <span class="fact-label">{f.label}</span>
+                {f.note && <span class="fact-note">{f.note}</span>}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- ── Research themes ──────────────────────────────────────────────── -->
+  <section class="section themes" aria-labelledby="themes-title">
+    <div class="wrap themes-grid">
+      <div class="themes-head" data-reveal>
+        <p class="eyebrow eyebrow--accent">Research themes</p>
+        <h2 id="themes-title">Perception that can be trusted, for the people who rely on it.</h2>
+        <p class="muted">
+          Human-centered sensing, assistive intelligence and edge–cloud systems — with a growing focus on AI
+          evaluation, calibration and sequential decision-making under uncertainty.
+        </p>
+      </div>
+      <ol class="theme-list">
+        {
+          themes.map((theme, i) => (
+            <li class="theme" data-reveal style={`--reveal-step:${i}`}>
+              <span class="theme-n" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div>
+                <h3>{theme.label}</h3>
+                <p>{theme.blurb}</p>
+              </div>
+              <a class="arrow-link" href={withBase(`research/?topic=${theme.id}`)}>
+                {theme.count} {theme.count === 1 ? 'entry' : 'entries'} <Icon name="arrow-right" />
+                <span class="visually-hidden">in {theme.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── Selected research ───────────────────────────────────────────── -->
+  <section class="section section--sunk" aria-labelledby="selected-research">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow eyebrow--accent">Selected research</p>
+        <h2 id="selected-research">Published work and manuscripts in review</h2>
+      </div>
+
+      <div class="research-split">
+        {
+          spotlight && (
+            <article class="spotlight" data-reveal aria-labelledby="spotlight-title">
+              <div class="spotlight-meta">
+                <StatusBadge status={spotlight.data.status} />
+                <span class="mono muted">
+                  {[spotlight.data.publisher, spotlight.data.venueShort ?? spotlight.data.year].filter(Boolean).join(' · ')}
+                </span>
+              </div>
+              <h3 id="spotlight-title">
+                <a href={withBase(`research/${spotlight.id}/`)}>{spotlight.data.title}</a>
+              </h3>
+              <AuthorList authors={spotlight.data.authors} />
+              <p class="spotlight-venue">
+                {spotlight.data.venue}, pp. {spotlight.data.pages}
+              </p>
+              <div class="spotlight-actions">
+                {spotlight.data.doi && (
+                  <a class="btn btn--small" href={`https://doi.org/${spotlight.data.doi}`} target="_blank" rel="noopener noreferrer">
+                    doi:{spotlight.data.doi} <Icon name="arrow-up-right" />
+                    <span class="visually-hidden">(opens in a new tab)</span>
+                  </a>
+                )}
+                {spotlight.data.citation && <CopyButton label="Copy citation" what="Citation" text={spotlight.data.citation} />}
+              </div>
+            </article>
+          )
+        }
+
+        <div class="review-list">
+          <h3 class="eyebrow">Under review</h3>
+          <ul>
+            {
+              underReview.map((r, i) => (
+                <li data-reveal style={`--reveal-step:${i}`}>
+                  <a href={withBase(`research/${r.id}/`)}>
+                    <span class="review-title">{r.data.shortTitle ?? r.data.title}</span>
+                    <span class="review-venue">
+                      <StatusBadge status={r.data.status} /> <em>{r.data.submittedTo}</em>
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+            {
+              ongoing.map((r) => (
+                <li data-reveal>
+                  <a href={withBase(`research/${r.id}/`)}>
+                    <span class="review-title">{r.data.shortTitle ?? r.data.title}</span>
+                    <span class="review-venue">
+                      <StatusBadge status={r.data.status} />
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+          <a class="arrow-link" href={withBase('research/')}>
+            All {research.length} research entries <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Selected projects ───────────────────────────────────────────── -->
+  <section class="section" aria-labelledby="selected-projects">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow eyebrow--accent">Selected projects</p>
+        <h2 id="selected-projects">From discrete logic to distributed robots</h2>
+        <p>Engineering work across robotics, embedded sensing, machine learning and full-stack health platforms.</p>
+      </div>
+
+      <ol class="project-rows">
+        {
+          featuredProjects.map((p, i) => (
+            <li class="project-row" data-reveal>
+              <a class="project-link" href={withBase(`projects/${p.id}/`)}>
+                <ProjectCover id={p.id} category={p.data.categories[0]} index={i + 1} />
+                <div class="project-text">
+                  <p class="eyebrow">
+                    {p.data.categories.map((c) => labelFor(projectCategories, c)).join(' · ')}
+                  </p>
+                  <h3>{p.data.title}</h3>
+                  <p>{p.data.tagline}</p>
+                  <span class="mono muted">{formatRange(p.data.start, p.data.end)}</span>
+                  <span class="arrow-link" aria-hidden="true">
+                    Read the case study <Icon name="arrow-right" />
+                  </span>
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+      <a class="arrow-link more" href={withBase('projects/')}>
+        All {projects.length} projects <Icon name="arrow-right" />
+      </a>
+    </div>
+  </section>
+
+  <!-- ── Path so far ─────────────────────────────────────────────────── -->
+  <section class="section section--sunk" aria-labelledby="path-title">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow eyebrow--accent">Experience</p>
+        <h2 id="path-title">Industry, research, teaching and a Mars rover team</h2>
+      </div>
+      <ol class="path">
+        {
+          experience.map((e, i) => (
+            <li data-reveal style={`--reveal-step:${i}`}>
+              <span class="path-kind">{labelFor(experienceKinds, e.data.kind)}</span>
+              <a href={withBase(`experience/#${e.id}`)}>
+                <span class="path-role">{e.data.role}</span>
+                <span class="path-org">{e.data.organisation}</span>
+              </a>
+              <span class="mono muted">{formatRange(e.data.start, e.data.end)}</span>
+            </li>
+          ))
+        }
+      </ol>
+      <a class="arrow-link more" href={withBase('experience/')}>
+        Full experience <Icon name="arrow-right" />
+      </a>
+    </div>
+  </section>
+
+  <ContactBand />
+</BaseLayout>
+
+<style>
+  /* Hero */
+  .hero {
+    position: relative;
+    padding-block: clamp(2.5rem, 1rem + 5vw, 5.5rem) var(--space-xl);
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-l);
+  }
+
+  :global(.hero-availability) {
+    margin-bottom: var(--space-m);
+  }
+
+  .hero-name {
+    font-size: var(--step-hero);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    margin-block: var(--space-s) var(--space-m);
+    font-weight: 400;
+  }
+
+  .hero-name span,
+  .hero-name em {
+    display: block;
+  }
+
+  .hero-name em {
+    font-style: italic;
+    color: var(--accent);
+    padding-left: 0.04em;
+  }
+
+  .hero-focus {
+    font-family: var(--font-display-stack);
+    font-size: var(--step-2);
+    line-height: 1.25;
+    max-width: 26ch;
+    color: var(--ink);
+  }
+
+  .hero-intro {
+    margin-top: var(--space-s);
+    max-width: 56ch;
+    color: var(--ink-soft);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: var(--space-l);
+  }
+
+  :global(.hero-visual) {
+    max-width: 34rem;
+    justify-self: end;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    margin-top: var(--space-xl);
+    border-top: 1px solid var(--line);
+  }
+
+  .fact {
+    padding: var(--space-m) var(--space-m) 0 0;
+  }
+
+  .fact + .fact {
+    padding-left: var(--space-m);
+    border-left: 1px solid var(--line);
+  }
+
+  .fact dd {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .fact-value {
+    font-family: var(--font-display-stack);
+    font-size: var(--step-3);
+    line-height: 1;
+  }
+
+  .fact-label {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  .fact-note {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    color: var(--muted);
+  }
+
+  @media (max-width: 56rem) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+
+    :global(.hero-visual) {
+      justify-self: center;
+      max-width: 22rem;
+      order: -1;
+      margin-bottom: calc(var(--space-l) * -1);
+      opacity: 0.9;
+    }
+
+    .fact:nth-child(odd) {
+      border-left: 0;
+      padding-left: 0;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    :global(.hero-visual) {
+      max-width: 15rem;
+      justify-self: end;
+      margin-bottom: -4.5rem;
+    }
+  }
+
+  /* Themes */
+  .themes-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+    gap: var(--space-xl);
+  }
+
+  .themes-head {
+    position: sticky;
+    top: calc(var(--header-h) + 2rem);
+    align-self: start;
+    display: grid;
+    gap: var(--space-s);
+  }
+
+  .themes-head h2 {
+    font-size: var(--step-3);
+  }
+
+  .theme-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .theme {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem var(--space-m);
+    padding-block: var(--space-m);
+    border-top: 1px solid var(--line);
+  }
+
+  .theme:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .theme-n {
+    grid-row: span 2;
+    font-family: var(--font-display-stack);
+    font-style: italic;
+    font-size: var(--step-3);
+    line-height: 1;
+    color: var(--accent);
+    min-width: 2.2ch;
+  }
+
+  .theme h3 {
+    font-size: var(--step-2);
+  }
+
+  .theme p {
+    margin-top: 0.4rem;
+    color: var(--ink-soft);
+    max-width: 52ch;
+  }
+
+  .theme .arrow-link {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  @media (max-width: 56rem) {
+    .themes-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-l);
+    }
+
+    .themes-head {
+      position: static;
+    }
+  }
+
+  /* Selected research */
+  .research-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: var(--space-xl);
+    align-items: start;
+  }
+
+  .spotlight {
+    position: relative;
+    display: grid;
+    gap: var(--space-s);
+    padding: clamp(1.5rem, 1rem + 2vw, 2.75rem);
+    border-radius: var(--radius-l);
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    border-radius: var(--radius-l) 0 0 var(--radius-l);
+    background: var(--accent);
+  }
+
+  .spotlight-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+  }
+
+  .spotlight h3 {
+    font-size: var(--step-3);
+    line-height: 1.12;
+  }
+
+  .spotlight h3 a {
+    text-decoration: none;
+  }
+
+  .spotlight-venue {
+    font-size: var(--step--1);
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .spotlight-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+  }
+
+  .spotlight-actions a {
+    overflow-wrap: anywhere;
+  }
+
+  .review-list ul {
+    list-style: none;
+    padding: 0;
+    margin-block: var(--space-xs) var(--space-s);
+  }
+
+  .review-list li {
+    border-top: 1px solid var(--line-strong);
+  }
+
+  .review-list li a {
+    display: grid;
+    gap: 0.35rem;
+    padding-block: var(--space-s);
+    text-decoration: none;
+  }
+
+  .review-title {
+    font-family: var(--font-display-stack);
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .review-list li a:hover .review-title {
+    color: var(--accent);
+  }
+
+  .review-venue {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 56rem) {
+    .research-split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Projects */
+  .project-rows {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  .project-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: var(--space-l);
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .project-row:nth-child(even) .project-link {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  }
+
+  .project-row:nth-child(even) :global(.cover) {
+    order: 2;
+  }
+
+  .project-link :global(.cover) {
+    transition:
+      transform 600ms var(--ease-out),
+      box-shadow 600ms var(--ease-out);
+  }
+
+  .project-link:hover :global(.cover) {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+  }
+
+  .project-text {
+    display: grid;
+    gap: var(--space-xs);
+    justify-items: start;
+  }
+
+  .project-text h3 {
+    font-size: var(--step-3);
+  }
+
+  .project-link:hover h3 {
+    color: var(--accent);
+  }
+
+  .project-text p:not(.eyebrow) {
+    color: var(--ink-soft);
+    max-width: 44ch;
+  }
+
+  .more {
+    margin-top: var(--space-l);
+  }
+
+  @media (max-width: 48rem) {
+    .project-link,
+    .project-row:nth-child(even) .project-link {
+      grid-template-columns: 1fr;
+      gap: var(--space-m);
+    }
+
+    .project-row:nth-child(even) :global(.cover) {
+      order: 0;
+    }
+  }
+
+  /* Path */
+  .path {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 2px solid var(--ink);
+  }
+
+  .path li {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    padding: var(--space-m) var(--space-m) var(--space-s) 0;
+  }
+
+  .path li::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-sunk);
+    border: 2px solid var(--accent);
+  }
+
+  .path li:first-child::before {
+    background: var(--accent);
+  }
+
+  .path-kind {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .path a {
+    display: grid;
+    gap: 0.25rem;
+    text-decoration: none;
+  }
+
+  .path-role {
+    font-family: var(--font-display-stack);
+    font-size: var(--step-1);
+    line-height: 1.25;
+  }
+
+  .path a:hover .path-role {
+    color: var(--accent);
+  }
+
+  .path-org {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 60rem) {
+    .path {
+      grid-template-columns: 1fr 1fr;
+      border-top: 0;
+      gap: 0 var(--space-m);
+    }
+
+    .path li {
+      border-top: 2px solid var(--ink);
+    }
+  }
+
+  @media (max-width: 34rem) {
+    .path {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
