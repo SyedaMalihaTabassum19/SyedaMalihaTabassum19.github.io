@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Icon from '@/components/Icon.astro';
-import { navigation } from '@/data/navigation';
+import { sections } from '@/data/navigation';
 import { withBase } from '@/lib/url';
 ---
 
@@ -17,13 +17,13 @@ import { withBase } from '@/lib/url';
         </p>
         <div class="actions">
           <a class="btn btn--primary" href={withBase('/')}><Icon name="arrow-left" /> Back to the homepage</a>
-          <a class="btn" href={withBase('research/')}>Browse research</a>
+          <a class="btn" href={withBase('#research')}>Browse research</a>
         </div>
       </div>
       <nav aria-label="Site sections">
         <p class="eyebrow">Or try</p>
         <ul>
-          {navigation.map((item) => <li><a href={withBase(item.href)}>{item.label}</a></li>)}
+          {sections.map((item) => <li><a href={withBase(`#${item.id}`)}>{item.label}</a></li>)}
         </ul>
       </nav>
     </div>
@@ -40,13 +40,13 @@ import { withBase } from '@/lib/url';
   .nf-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-    gap: var(--space-xl);
+    gap: var(--s-6);
     align-items: end;
   }
 
   h1 {
     font-size: var(--step-4);
-    margin-block: var(--space-xs) var(--space-s);
+    margin-block: var(--s-1) var(--s-2);
     max-width: 16ch;
   }
 
@@ -54,18 +54,18 @@ import { withBase } from '@/lib/url';
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
-    margin-top: var(--space-l);
+    margin-top: var(--s-4);
   }
 
   ul {
     list-style: none;
     padding: 0;
-    margin-top: var(--space-xs);
-    border-top: 1px solid var(--line);
+    margin-top: var(--s-1);
+    border-top: 1px solid var(--border);
   }
 
   li {
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--border);
   }
 
   li a {

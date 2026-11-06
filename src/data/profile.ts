@@ -1,4 +1,7 @@
 // Identity and contact details shown across the site.
+import portraitCutout from '../assets/portrait-cutout.png';
+import aboutPortrait from '../assets/about-portrait.png';
+
 // Source: the CV. Public contact details only — never add a phone number,
 // a home address or referees' details here.
 
@@ -38,8 +41,10 @@ export interface Profile {
   };
   /** Path inside /public, or null to hide every CV download button. */
   cv: { path: string; label: string; updated: string } | null;
-  /** Optional portrait in src/assets — null shows the abstract monogram instead. */
+  /** Hero portrait (transparent cut-out) — null shows the abstract diagram instead. */
   portrait: null | { src: ImageMetadata; alt: string };
+  /** About-section photo (transparent cut-out) — null falls back to the hero portrait. */
+  aboutPortrait: null | { src: ImageMetadata; alt: string };
   interests: string[];
 }
 
@@ -78,7 +83,13 @@ export const profile: Profile = {
     label: 'Download CV (PDF)',
     updated: '2026-10',
   },
-  portrait: null,
+  // Generated from "Formal picture in suit.jpg" by scripts/make-portrait-cutout.py.
+  portrait: { src: portraitCutout, alt: 'Syeda Maliha Tabassum, in a navy suit, smiling' },
+  // Generated from "890187627_…_n.jpg" by scripts/make-portrait-cutout.py.
+  aboutPortrait: {
+    src: aboutPortrait,
+    alt: 'Syeda Maliha Tabassum in a beige checked blazer and coral shirt, smiling',
+  },
   interests: [
     'Reliable AI Evaluation',
     'AI Calibration',

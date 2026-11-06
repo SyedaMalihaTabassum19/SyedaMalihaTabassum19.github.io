@@ -49,6 +49,20 @@ gives directly are the **only** factual sources.
 - **Base path:** every internal link and `/public` asset goes through `withBase()` from
   `src/lib/url.ts`. Never hard-code `/…` hrefs. Page links end with `/`
   (`trailingSlash: 'always'`). Site URL/base live only in `site.config.mjs`.
+- **Strictly one page:** everything lives on `src/pages/index.astro`, which stacks the
+  components in `src/components/sections/` with anchors `#home #about #skills #research
+  #projects #experience #education #contact` (ids must match `src/data/navigation.ts`). Do
+  **not** add separate About/research/project pages. Extra detail goes in inline expanders:
+  research rows (`#research-<id>`) and project panels (`#project-<id>`). Every former URL
+  (`/about/`, `/research/<id>/`, `/projects/<id>/` …) is a `SectionRedirect` stub pointing at
+  its anchor — keep them so published links keep working.
+- **Expanders:** `button[data-expander-toggle][aria-controls]` + `.expander[data-expander] >
+  .expander-inner`. Panels render open (readable without JS); `src/scripts/site.ts` collapses
+  them, animates rows 0fr↔1fr, opens a panel from the URL hash, restores focus on close.
+- **Visual language (v3):** dark-first, near-black/charcoal surfaces, orange `#FD6F00` accent,
+  Lato + JetBrains Mono, centred `SectionHeading`s, 4px-radius buttons, small status labels.
+  Orange fills carry `--on-accent` (near-black) text; orange *text* uses `--accent-text`. See
+  REDESIGN_PLAN.md. Reuse tokens and patterns instead of inventing one-off styles.
 - **Content first:** facts belong in `src/content/**` (Markdown) or `src/data/**`
   (JSON/TS), validated by `src/content.config.ts`. Vocabularies (statuses, topics,
   categories) are in `src/data/taxonomy.ts`.

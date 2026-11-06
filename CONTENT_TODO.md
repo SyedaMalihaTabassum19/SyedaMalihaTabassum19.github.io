@@ -84,3 +84,42 @@ Written from the CV; please read and adjust anything that doesn't sound like you
   for that item names it, or names something it directly covers. Most skills deliberately
   have no link. See `src/data/skills.json`.
 - **Project covers** are abstract, code-drawn illustrations by category, not screenshots.
+
+## Added with the v3 redesign (dark / orange single page)
+
+### Assets the new layout is ready for
+- [x] **Portrait photo** supplied (`Formal picture in suit.jpg`) — cut out with
+      `scripts/make-portrait-cutout.py`; colour in the hero, grayscale on the About arch.
+- [x] **WeHeal card image** supplied — a screenshot of the weheal.live home page
+      (`src/assets/projects/weheal/homepage.png`).
+- [ ] **Project card images** for the Arduino health monitor, PathGuard and the smoking
+      model (screenshots, photos of the hardware, or diagrams). Until then those cards show an
+      abstract decorative graphic. Add each as `cover:` in its project file.
+- [ ] **ArUco bot card image:** a frame from the demo video published by Reshad Ul Karim
+      (`src/assets/projects/aruco-service-bot/demo-frame.jpg`, credited in the project
+      panel). Confirm he's happy for it to be used, or supply your own photo.
+- [ ] **Your contribution per research entry.** The design has room for a "My contribution"
+      note in each research panel, but the CV only gives the project descriptions, so none is
+      shown. Add a short note in each `src/content/research/*.md` body if you'd like one.
+
+### Decisions
+- Skill percentages from the reference's About section were **not** used (they would be
+  invented ratings); skills appear as grouped labels with links to where they were applied.
+- The reference's stats ("years of experience", "happy clients") were replaced with counts
+  computed from content: published papers, manuscripts under review, projects, and the 250+
+  students from the teaching role.
+- The reference's contact form was not added (no delivery service is configured); the
+  contact section uses a prominent email action instead.
+- The former per-paper and per-project pages now forward to their inline entries
+  (`#research-<id>`, `#project-<id>`), so links already shared keep working.
+- The reference recording (`Recording 2026-10-29 061445.mp4`) stays local and is excluded
+  from git.
+
+## Certificates for Recognition
+- [ ] **Google Drive links** for each award's certificate (Dean's List/VC's List, merit scholarship,
+      EXCELERATE, CSE471, RoboSoccer ×2, Hult Prize, Duke of Edinburgh). Each one gets a
+      "View certificate" button with an in-page preview once its link is added to
+      `src/data/awards.json` (README → "Add certificate links"). Set sharing to
+      "Anyone with the link → Viewer".
+- [x] **Secondary School Certificate** added (Jan 2017 – May 2019, Shaheed Bir Uttam Lt. Anwar Girls
+      College, GPA 5.00/5.00) — supplied by the owner; it is not on the current CV.

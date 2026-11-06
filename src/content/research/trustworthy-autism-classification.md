@@ -1,5 +1,6 @@
 ---
 title: "Beyond Discrimination: Toward Trustworthy Autism Classification from Resting-State Functional Connectomes through Calibration and Interpretable Modeling"
+short: Autism classification
 shortTitle: Trustworthy autism classification from resting-state functional connectomes
 status: under-review
 type: journal-article

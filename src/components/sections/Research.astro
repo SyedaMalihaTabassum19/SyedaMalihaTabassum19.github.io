@@ -1,0 +1,144 @@
+---
+import FilterControls from '@/components/FilterControls.astro';
+import ResearchRow from '@/components/ResearchRow.astro';
+import SectionHeading from '@/components/SectionHeading.astro';
+import StatusBadge from '@/components/StatusBadge.astro';
+import { researchStatuses, researchTopics } from '@/data/taxonomy';
+import { getResearch } from '@/lib/content';
+
+const research = await getResearch();
+const statuses = researchStatuses
+  .map((s) => ({ ...s, entries: research.filter((r) => r.data.status === s.id) }))
+  .filter((s) => s.entries.length > 0);
+const topics = researchTopics
+  .map((t) => ({ id: t.id, label: t.label, count: research.filter((r) => r.data.topics.includes(t.id)).length }))
+  .filter((t) => t.count > 0);
+---
+
+<section class="section" id="research" aria-labelledby="research-title">
+  <div class="wrap">
+    <SectionHeading
+      id="research-title"
+      title="Research & Publications"
+      sub="When should a model commit — and when should it abstain? My work spans reliable and calibrated AI, 3D perception, health AI and assistive agentic systems."
+    />
+
+    <dl class="legend" data-reveal>
+      {
+        statuses.map((s) => (
+          <div>
+            <dt>
+              <StatusBadge status={s.id} />
+            </dt>
+            <dd>{s.note}</dd>
+          </div>
+        ))
+      }
+    </dl>
+
+    <div data-filter-root data-filter-noun="entry|entries">
+      <FilterControls
+        idPrefix="research"
+        searchLabel="Search titles, topics, venues and authors"
+        searchPlaceholder="Search titles, topics, authors"
+        facets={[
+          {
+            name: 'status',
+            legend: 'Status',
+            total: research.length,
+            options: statuses.map((s) => ({ id: s.id, label: s.label, count: s.entries.length })),
+          },
+          { name: 'topic', legend: 'Topic', total: research.length, options: topics, control: 'select' },
+        ]}
+      />
+
+      <p class="count mono" data-filter-count role="status" aria-live="polite" aria-atomic="true">
+        {research.length} entries
+      </p>
+
+      {
+        statuses.map((s) => (
+          <div class="group" data-filter-group>
+            <h3 class="group-title" id={`group-${s.id}`}>
+              {s.label} <span class="mono muted">({s.entries.length})</span>
+            </h3>
+            <ol class="rows" aria-labelledby={`group-${s.id}`}>
+              {s.entries.map((entry) => (
+                <ResearchRow entry={entry} feature={s.id === 'published' && entry.data.featured} />
+              ))}
+            </ol>
+          </div>
+        ))
+      }
+
+      <div class="empty" data-filter-empty hidden>
+        <p class="empty-title">No research matches those filters.</p>
+        <p class="muted">Try another status or topic, or a shorter search term.</p>
+        <button type="button" class="btn btn--primary" data-filter-reset>Reset filters</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-2) var(--s-6);
+    margin-bottom: var(--s-6);
+  }
+
+  .legend > div {
+    display: grid;
+    justify-items: center;
+    gap: 0.2rem;
+    max-width: 16rem;
+    text-align: center;
+  }
+
+  .legend dd {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .count {
+    margin-block: var(--s-3) var(--s-2);
+    color: var(--muted);
+    font-size: var(--step--1);
+  }
+
+  .group + .group {
+    margin-top: var(--s-6);
+  }
+
+  .group-title {
+    font-size: var(--step-2);
+    margin-bottom: var(--s-2);
+  }
+
+  .group-title .mono {
+    font-size: var(--step--1);
+  }
+
+  .rows {
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .empty {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-1);
+    margin-top: var(--s-3);
+    padding: var(--s-6) var(--s-4);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-l);
+  }
+
+  .empty-title {
+    font-size: var(--step-2);
+    font-weight: 700;
+  }
+</style>

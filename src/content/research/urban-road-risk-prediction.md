@@ -1,5 +1,6 @@
 ---
 title: Multimodal Risk Prediction in Urban Road Scenes
+short: Urban road risk
 status: in-progress
 type: research-project
 topics: [perception, reliable-ai]

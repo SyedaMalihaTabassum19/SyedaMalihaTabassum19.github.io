@@ -1,5 +1,6 @@
 ---
 title: "CAMDet: Camera-Agnostic Monocular Metric 3D Object Detection"
+short: CAMDet
 shortTitle: "CAMDet: camera-agnostic monocular metric 3D detection"
 status: under-review
 type: journal-article

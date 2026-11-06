@@ -49,12 +49,12 @@ const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     border-radius: var(--radius-l);
-    border: 1px solid var(--line);
+    border: 1px solid var(--border);
     background:
-      repeating-linear-gradient(90deg, transparent 0 23px, color-mix(in srgb, var(--ink) 7%, transparent) 23px 24px),
-      repeating-linear-gradient(0deg, transparent 0 23px, color-mix(in srgb, var(--ink) 7%, transparent) 23px 24px),
-      radial-gradient(80% 80% at 30% 30%, var(--accent-glow), transparent),
-      var(--bg-sunk);
+      repeating-linear-gradient(90deg, transparent 0 23px, color-mix(in srgb, var(--text) 7%, transparent) 23px 24px),
+      repeating-linear-gradient(0deg, transparent 0 23px, color-mix(in srgb, var(--text) 7%, transparent) 23px 24px),
+      radial-gradient(80% 80% at 30% 30%, var(--accent-soft), transparent),
+      var(--bg-alt);
     display: grid;
     place-items: center;
   }
@@ -72,13 +72,13 @@ const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
     align-items: center;
     gap: 1rem;
     padding: 0.75rem 1.4rem 0.75rem 0.75rem;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--border-strong);
     border-radius: 999px;
-    background: var(--bg-elev);
-    color: var(--ink);
+    background: var(--surface);
+    color: var(--text);
     text-align: left;
     box-shadow: var(--shadow);
-    transition: transform var(--dur) var(--ease-out), border-color var(--dur);
+    transition: transform var(--fast) var(--ease), border-color var(--fast);
   }
 
   .play:hover {
@@ -93,7 +93,7 @@ const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
     height: 3.5rem;
     border-radius: 50%;
     background: var(--accent);
-    color: var(--accent-ink);
+    color: var(--on-accent);
     padding-left: 3px;
   }
 
@@ -123,7 +123,7 @@ const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
     flex-wrap: wrap;
     gap: 0.35rem 1rem;
     font-size: var(--step--1);
-    color: var(--ink-soft);
+    color: var(--text-2);
   }
 
   figcaption a {

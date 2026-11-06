@@ -1,5 +1,6 @@
 ---
 title: "Vision-Based Fall Detection: Systematic Review of Methods, Trends, and Challenges"
+short: Fall-detection review
 shortTitle: "Vision-based fall detection: a systematic review"
 status: under-review
 type: systematic-review

@@ -1,20 +1,23 @@
-// Site-wide behaviour: theme switch, mobile menu, scroll reveals, back-to-top.
-// Everything here is progressive enhancement — the site is fully readable
-// and navigable without it.
+// Site-wide behaviour for the single-page portfolio: theme switch, mobile menu,
+// active-section highlighting, sticky-header state, reveals, back-to-top and
+// inline expanders (research details, project panels, longer About story).
+//
+// Everything is progressive enhancement: without JavaScript every panel is
+// open and every section readable. All motion respects prefers-reduced-motion.
 import { announce } from './announce';
+import { navTargetFor } from '@/data/navigation';
 
 const root = document.documentElement;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
 
 // ── Theme ────────────────────────────────────────────────────────────────
 function initTheme(): void {
   const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
   const label = button?.querySelector<HTMLElement>('[data-theme-label]');
-  const system = window.matchMedia('(prefers-color-scheme: dark)');
+  const systemLight = window.matchMedia('(prefers-color-scheme: light)');
   if (!button || !label) return;
 
-  const effective = () => (root.dataset.theme as 'light' | 'dark' | undefined) ?? (system.matches ? 'dark' : 'light');
+  const effective = () => (root.dataset.theme as 'light' | 'dark' | undefined) ?? (systemLight.matches ? 'light' : 'dark');
 
   const sync = () => {
     const now = effective();
@@ -29,6 +32,10 @@ function initTheme(): void {
 
   button.addEventListener('click', () => {
     const next = effective() === 'dark' ? 'light' : 'dark';
+    if (!reducedMotion.matches) {
+      root.classList.add('theme-switching');
+      window.setTimeout(() => root.classList.remove('theme-switching'), 300);
+    }
     root.dataset.theme = next;
     try {
       localStorage.setItem('theme', next);
@@ -40,7 +47,7 @@ function initTheme(): void {
   });
 
   // Follow the operating system until the visitor makes an explicit choice.
-  system.addEventListener('change', () => {
+  systemLight.addEventListener('change', () => {
     if (!root.dataset.theme) sync();
   });
 }
@@ -51,12 +58,11 @@ function initMenu(): void {
   const menu = document.querySelector<HTMLElement>('[data-menu]');
   if (!toggle || !menu) return;
   const outside = [document.querySelector('main'), document.querySelector('.site-footer'), document.querySelector('[data-to-top]')];
-  const compact = window.matchMedia('(max-width: 66rem)');
+  const compact = window.matchMedia('(max-width: 63.99rem)');
 
   const setOpen = (open: boolean, returnFocus = false) => {
     toggle.setAttribute('aria-expanded', String(open));
     menu.toggleAttribute('data-open', open);
-    document.body.style.overflow = open ? 'hidden' : '';
     outside.forEach((el) => el?.toggleAttribute('inert', open));
     if (open) menu.querySelector<HTMLAnchorElement>('a')?.focus();
     else if (returnFocus) toggle.focus();
@@ -69,7 +75,6 @@ function initMenu(): void {
 
   applyMode();
   compact.addEventListener('change', applyMode);
-
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
 
   document.addEventListener('keydown', (event) => {
@@ -80,28 +85,54 @@ function initMenu(): void {
     if ((event.target as HTMLElement).closest('a')) setOpen(false);
   });
 
-  // Keep Tab inside the open menu panel + toggle button.
+  // Keep Tab inside the open menu + toggle button.
   menu.addEventListener('keydown', (event) => {
     if (event.key !== 'Tab' || !menu.hasAttribute('data-open')) return;
-    const links = [...menu.querySelectorAll<HTMLAnchorElement>('a')];
-    const last = links.at(-1);
-    if (!event.shiftKey && document.activeElement === last) {
+    const links = [...menu.querySelectorAll<HTMLAnchorElement>('a')].filter((a) => a.offsetParent !== null);
+    if (!event.shiftKey && document.activeElement === links.at(-1)) {
       event.preventDefault();
       toggle.focus();
     }
   });
 }
 
-// ── Scroll state, back-to-top ────────────────────────────────────────────
-function initScrollState(): void {
+// ── Scroll state: header, back-to-top, active section ────────────────────
+function initScroll(): void {
   const toTop = document.querySelector<HTMLAnchorElement>('[data-to-top]');
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')];
+  const sections = links
+    .map((l) => document.getElementById(l.dataset.navLink!))
+    .filter((el): el is HTMLElement => Boolean(el));
+
+  const setActive = (id: string | null) => {
+    const exact = links.find((l) => l.dataset.navLink === id && l.offsetParent !== null);
+    const mapped = id ? links.find((l) => l.dataset.navLink === (navTargetFor[id] ?? id)) : undefined;
+    const active = exact ?? mapped;
+    for (const link of links) {
+      if (link === active) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    }
+  };
+
   let ticking = false;
   const update = () => {
     const y = window.scrollY;
     root.classList.toggle('is-scrolled', y > 8);
     toTop?.classList.toggle('is-shown', y > window.innerHeight * 0.9);
+
+    if (sections.length) {
+      const line = window.innerHeight * 0.35;
+      let current: string | null = null;
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= line) current = section.id;
+      }
+      const atBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 4;
+      if (atBottom) current = sections.at(-1)!.id;
+      setActive(current);
+    }
     ticking = false;
   };
+
   update();
   window.addEventListener(
     'scroll',
@@ -113,16 +144,17 @@ function initScrollState(): void {
     },
     { passive: true },
   );
+  window.addEventListener('resize', update);
 
   // Move focus to the top of the page for keyboard and screen-reader users.
   toTop?.addEventListener('click', () => {
-    window.setTimeout(() => document.querySelector<HTMLElement>('.brand')?.focus({ preventScroll: true }), 0);
+    window.setTimeout(() => document.querySelector<HTMLElement>('.logo')?.focus({ preventScroll: true }), 0);
   });
 }
 
 // ── Reveal on scroll ─────────────────────────────────────────────────────
-// Only elements that start below the fold are hidden, and only once this
-// script runs — so nothing is ever invisible when JS is off or fails.
+// Only elements that start below the fold are hidden, and only by this
+// script — so nothing is ever invisible when JS is off or fails.
 function initReveal(): void {
   if (reducedMotion.matches || !('IntersectionObserver' in window)) return;
   const items = [...document.querySelectorAll<HTMLElement>('[data-reveal]')];
@@ -137,7 +169,7 @@ function initReveal(): void {
         observer.unobserve(el);
       }
     },
-    { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+    { rootMargin: '0px 0px -6% 0px', threshold: 0.05 },
   );
   for (const el of items) {
     if (el.getBoundingClientRect().top < fold) continue;
@@ -146,7 +178,148 @@ function initReveal(): void {
   }
 }
 
+// ── Inline expanders ─────────────────────────────────────────────────────
+// Markup: button[data-expander-toggle][aria-controls=ID] + .expander#ID[data-expander]
+// Optional: [data-expander-hide] removes the collapsed panel from layout
+// (project panels); [data-expander-group] lets one panel open at a time;
+// button[data-expander-close=ID] closes and returns focus to the trigger.
+function initExpanders(): void {
+  const panels = [...document.querySelectorAll<HTMLElement>('[data-expander]')];
+  if (!panels.length) return;
+  root.classList.add('js-expanders');
+
+  const togglesFor = (panel: HTMLElement) =>
+    [...document.querySelectorAll<HTMLButtonElement>(`[data-expander-toggle][aria-controls="${panel.id}"]`)];
+  const isOpen = (panel: HTMLElement) => !panel.hasAttribute('data-collapsed');
+  const hideTimers = new WeakMap<HTMLElement, number>();
+
+  const setOpen = (panel: HTMLElement, open: boolean, animate = true) => {
+    const hide = panel.hasAttribute('data-expander-hide');
+    window.clearTimeout(hideTimers.get(panel));
+    for (const toggle of togglesFor(panel)) {
+      toggle.setAttribute('aria-expanded', String(open));
+      const label = toggle.querySelector<HTMLElement>('[data-label-open]');
+      if (label) label.textContent = open ? label.dataset.labelOpen! : label.dataset.labelClosed!;
+    }
+    if (open) {
+      // One open panel per group (projects).
+      const group = panel.closest('[data-expander-group]');
+      if (group) {
+        for (const other of group.querySelectorAll<HTMLElement>('[data-expander]')) {
+          if (other !== panel && isOpen(other)) setOpen(other, false, false);
+        }
+      }
+      if (hide) {
+        panel.hidden = false;
+        if (animate && !reducedMotion.matches) void panel.offsetHeight; // start from the collapsed state
+      }
+      panel.removeAttribute('data-collapsed');
+    } else {
+      panel.setAttribute('data-collapsed', '');
+      if (hide) {
+        const delay = animate && !reducedMotion.matches ? 340 : 0;
+        hideTimers.set(
+          panel,
+          window.setTimeout(() => {
+            if (panel.hasAttribute('data-collapsed')) panel.hidden = true;
+          }, delay),
+        );
+      }
+    }
+  };
+
+  // Which panel does an *entry* hash belong to? Only individual entries
+  // (#research-<id>, #project-<id>) or panels themselves open automatically —
+  // section anchors like #about or #research never do.
+  const panelFor = (target: Element | null): HTMLElement | null => {
+    if (!target) return null;
+    if (target.hasAttribute('data-expander')) return target as HTMLElement;
+    const owned = (target as HTMLElement).dataset?.panel;
+    if (owned) return document.getElementById(owned);
+    if (target.matches('[data-filter-item]')) return target.querySelector<HTMLElement>('[data-expander]');
+    return target.closest<HTMLElement>('[data-expander]');
+  };
+
+  // Collapse everything except a panel the URL points at.
+  const initial = location.hash ? panelFor(document.getElementById(decodeURIComponent(location.hash.slice(1)))) : null;
+  for (const panel of panels) {
+    for (const toggle of togglesFor(panel)) toggle.hidden = false;
+    setOpen(panel, panel === initial, false);
+  }
+
+  document.addEventListener('click', (event) => {
+    const toggle = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-expander-toggle]');
+    if (toggle) {
+      const panel = document.getElementById(toggle.getAttribute('aria-controls')!);
+      if (panel) setOpen(panel, !isOpen(panel));
+      return;
+    }
+    const close = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-expander-close]');
+    if (close) {
+      const panel = document.getElementById(close.dataset.expanderClose!);
+      if (!panel) return;
+      setOpen(panel, false);
+      const trigger = togglesFor(panel)[0];
+      trigger?.focus({ preventScroll: true });
+      trigger?.closest('article, li')?.scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+    }
+  });
+
+  for (const close of document.querySelectorAll<HTMLButtonElement>('[data-expander-close]')) close.hidden = false;
+
+  // Escape inside an open panel closes it and returns focus to its trigger.
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const panel = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>('[data-expander]');
+    if (!panel || !isOpen(panel) || !panel.hasAttribute('data-expander-hide')) return;
+    setOpen(panel, false);
+    togglesFor(panel)[0]?.focus();
+  });
+
+  // Deep links: #research-<id> / #project-<id> open the entry and bring it into view.
+  const openFromHash = () => {
+    const target = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+    const panel = panelFor(target);
+    if (!target || !panel) return;
+    const filterRoot = target.closest<HTMLElement>('[data-filter-root]');
+    if (filterRoot && (target.closest('[hidden]') || target.hidden)) {
+      filterRoot.dispatchEvent(new CustomEvent('filters:reset'));
+    }
+    setOpen(panel, true, false);
+    requestAnimationFrame(() => target.scrollIntoView({ block: 'start', behavior: 'auto' }));
+  };
+  window.addEventListener('hashchange', openFromHash);
+  if (initial) openFromHash();
+
+  // A filtered-out project closes its open panel.
+  document.addEventListener('filters:applied', () => {
+    for (const panel of panels) {
+      const owner = panel.dataset.owner ? document.getElementById(panel.dataset.owner) : null;
+      if (owner?.hidden && isOpen(panel)) setOpen(panel, false, false);
+    }
+  });
+}
+
+// ── Decorative animations only run while visible ─────────────────────────
+function initAnimVisibility(): void {
+  const scenes = [...document.querySelectorAll<HTMLElement>('[data-anim]')];
+  if (!scenes.length) return;
+  if (!('IntersectionObserver' in window)) {
+    scenes.forEach((s) => s.classList.add('is-playing'));
+    return;
+  }
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) entry.target.classList.toggle('is-playing', entry.isIntersecting);
+    },
+    { rootMargin: '100px 0px' },
+  );
+  scenes.forEach((s) => observer.observe(s));
+}
+
 initTheme();
+initAnimVisibility();
 initMenu();
-initScrollState();
+initScroll();
 initReveal();
+initExpanders();

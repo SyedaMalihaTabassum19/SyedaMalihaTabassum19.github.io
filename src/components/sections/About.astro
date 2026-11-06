@@ -1,0 +1,546 @@
+---
+// About + Skills. Asymmetric: framed identity mark left, statement and
+// biography right; expertise cards (reference "Services" style) below.
+import { Image } from 'astro:assets';
+import Icon, { type IconName } from '@/components/Icon.astro';
+import SectionHeading from '@/components/SectionHeading.astro';
+import SkillVisual from '@/components/SkillVisual.astro';
+import { profile } from '@/data/profile';
+import { getEducation, getSkills, resolveEvidence } from '@/lib/content';
+import { withBase } from '@/lib/url';
+
+const [degree] = await getEducation();
+const photo = profile.aboutPortrait ?? profile.portrait;
+const groups = await Promise.all(
+  (await getSkills()).map(async (group) => {
+    const evidence = (await Promise.all(group.data.items.map((item) => resolveEvidence(item.usedIn)))).flat();
+    const unique = [...new Map(evidence.map((e) => [e.href, e])).values()];
+    // Grouped as Research / Projects / Experience, each with short names.
+    const applied = (['Research', 'Project', 'Experience'] as const)
+      .map((kind) => ({ kind, items: unique.filter((e) => e.kind === kind) }))
+      .filter((g) => g.items.length > 0);
+    return { ...group.data, applied };
+  }),
+);
+
+const icons: Record<string, IconName> = {
+  'machine-learning': 'flask',
+  'computer-vision': 'eye',
+  'agentic-systems': 'agent',
+  'embedded-robotics': 'cpu',
+  programming: 'terminal',
+  tools: 'wrench',
+};
+---
+
+<section class="section section--alt" id="about" aria-labelledby="about-title">
+  <div class="wrap">
+    <SectionHeading
+      id="about-title"
+      title="About me"
+      sub="Computer science graduate and researcher working on multimodal AI, agentic systems and reliable decision-making."
+    />
+
+    <div class="about-grid">
+      <div class:list={['frame', { 'frame--photo': photo }]} data-reveal aria-hidden={photo ? undefined : 'true'}>
+        <div class="arch"></div>
+        {
+          photo ? (
+            <Image
+              class="portrait"
+              src={photo.src}
+              alt={photo.alt}
+              widths={[360, 560, 800, 1100]}
+              sizes="(max-width: 48rem) 70vw, 30vw"
+              quality={90}
+              loading="lazy"
+            />
+          ) : (
+            <div class="mark">
+              <span class="initials">SMT</span>
+              <span class="ring" />
+              <span class="ring ring--2" />
+            </div>
+          )
+        }
+      </div>
+
+      <div class="story" data-reveal style="--reveal-step:1">
+        <p class="statement">
+          I’m particularly interested in building and evaluating AI systems that support
+          <span class="accent">robust real-world decisions</span> in high-stakes, human-centered environments.
+        </p>
+        <p>
+          My work focuses on human-centered sensing, assistive intelligence, edge–cloud AI systems and automation, with a
+          growing interest in AI evaluation, calibration and sequential decision-making under uncertainty.
+        </p>
+        <p>
+          I completed a B.Sc. in Computer Science and Engineering at BRAC University (September 2022 – September 2026)
+          with a CGPA of {degree?.data.result?.value ?? '3.93'} out of {degree?.data.result?.scale ?? '4.00'}, on a
+          merit-based academic scholarship and on the Dean’s List and Vice Chancellor’s List.
+        </p>
+
+        <button
+          class="more-toggle"
+          type="button"
+          aria-expanded="true"
+          aria-controls="about-more"
+          data-expander-toggle
+          hidden
+        >
+          <span class="toggle-icon" aria-hidden="true"><Icon name="plus" /></span>
+          <span data-label-open="Show less" data-label-closed="Read the longer story">Show less</span>
+        </button>
+        <div class="expander" id="about-more" data-expander>
+          <div class="expander-inner">
+            <div class="more">
+              <p>
+                On the research side, I co-authored a peer-reviewed IEEE JCSSE 2026 paper on a vision-based hand gesture
+                keyboard–mouse framework with bilingual next-word prediction. Manuscripts now under review examine when
+                available camera motions can — and cannot — identify a scene’s 3D physical geometry, camera-agnostic
+                monocular metric 3D detection, calibrated and interpretable autism classification from functional
+                connectomes, and the evidence base for vision-based fall detection.
+              </p>
+              <p>
+                Alongside the research, I build physical systems: a microcontroller-free obstacle avoider made from
+                discrete logic, a dual-ESP32 mobile manipulator that localises itself from ArUco markers, a wearable health
+                monitor with GSM/GPS alerts, and the vision, networking and mechanical subsystems of BRAC University’s Mars
+                rover team, Mongoltori.
+              </p>
+              <p>
+                I’ve also worked in industry and in the classroom. As a NEXTERN in Grameenphone’s Technology
+                Infrastructure Management team, I automated deployment and connectivity monitoring and weekly reporting
+                for rectifiers and Li-Ion batteries using Huawei NetEco. As an undergraduate teaching assistant for Data
+                Structures, I mentored more than 250 students through laboratory sessions and one-to-one guidance.
+              </p>
+              <p>
+                The common thread is reliability: systems whose confidence means something, and that can recognise when
+                they should not decide at all.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <ul class="facts">
+          <li><Icon name="pin" /> {profile.location}</li>
+          <li><Icon name="cap" /> {degree?.data.institution}</li>
+          {profile.availability && <li class="accent"><Icon name="rocket" /> {profile.availability.label}</li>}
+        </ul>
+
+        {
+          profile.cv && (
+            <a class="btn btn--primary" href={withBase(profile.cv.path)} download>
+              <Icon name="download" /> Download CV
+            </a>
+          )
+        }
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="skills" id="skills">
+      <div class="skills-head" data-reveal>
+        <h3>Expertise</h3>
+        <p>Grouped by area, with links to where each was applied on this page. No self-rated percentages.</p>
+      </div>
+      <ul class="skill-grid">
+        {
+          groups.map((group, i) => (
+            <li class:list={['skill', { 'skill--featured': i === 0 }]} data-reveal style={`--reveal-step:${i % 3}`}>
+              <div class="skill-top">
+                <span class="skill-pill">
+                  {String(i + 1).padStart(2, '0')} · {group.items.length} skills
+                </span>
+                <span class="skill-icon" aria-hidden="true">
+                  <Icon name={icons[group.id] ?? 'flask'} />
+                </span>
+              </div>
+              <h4>{group.label}</h4>
+              <p class="skill-desc">{group.description}</p>
+              <ul class="skill-tags" aria-label={`${group.label} skills`}>
+                {group.items.map((item) => (
+                  <li>{item.name}</li>
+                ))}
+              </ul>
+              {group.applied.length > 0 && (
+                <div class="applied">
+                  {group.applied.map((g) => (
+                    <div class="applied-group">
+                      <p class="applied-kind">{g.kind === 'Project' ? 'Projects' : g.kind}</p>
+                      <ul>
+                        {g.items.map((e) => (
+                          <li>
+                            <a href={withBase(e.href)}>{e.label}</a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <SkillVisual kind={group.id} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: clamp(2rem, 1rem + 4vw, 5rem);
+    align-items: center;
+  }
+
+  /* Arch backdrop, echoing the reference's About portrait. */
+  .frame {
+    position: relative;
+    display: grid;
+    place-items: end center;
+    aspect-ratio: 4 / 5;
+    max-width: 26rem;
+    width: 100%;
+    justify-self: center;
+  }
+
+  .arch {
+    position: absolute;
+    inset: 12% 0 0;
+    border-radius: 999px 999px var(--radius-l) var(--radius-l);
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  /* With a photo: tall frame, arch in the lower part, head rising above it. */
+  .frame--photo {
+    aspect-ratio: 3 / 4.4;
+    max-width: 28rem;
+  }
+
+  .frame--photo .arch {
+    inset: 22% 4% 0;
+    background:
+      radial-gradient(80% 60% at 50% 30%, var(--accent-soft), transparent 70%),
+      var(--surface);
+  }
+
+  .portrait {
+    position: relative;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: bottom;
+  }
+
+  .mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 1;
+    margin-bottom: 14%;
+  }
+
+  .initials {
+    font-size: clamp(4rem, 3rem + 5vw, 7rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .ring {
+    position: absolute;
+    inset: 14%;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 50%;
+  }
+
+  .ring--2 {
+    inset: 4%;
+    border-style: dashed;
+    border-color: var(--border);
+  }
+
+  .ring::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: calc(50% - 6px);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .ring--2::after {
+    display: none;
+  }
+
+  .story {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-2);
+    color: var(--text-2);
+  }
+
+  .statement {
+    font-size: var(--step-2);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text);
+  }
+
+  .more-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    font-weight: 700;
+  }
+
+  .expander {
+    width: 100%;
+  }
+
+  .more {
+    display: grid;
+    gap: var(--s-2);
+    padding-bottom: var(--s-1);
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-3);
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    font-weight: 700;
+  }
+
+  .facts li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .facts :global(svg) {
+    color: var(--accent);
+  }
+
+  /* Skills */
+  .skills {
+    margin-top: clamp(4rem, 2rem + 5vw, 6rem);
+    scroll-margin-top: calc(var(--header-h) + 1rem);
+  }
+
+  .skills-head {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-1);
+    text-align: center;
+    margin-bottom: var(--s-6);
+  }
+
+  .skills-head h3 {
+    font-size: var(--step-3);
+  }
+
+  .skills-head p {
+    color: var(--muted);
+  }
+
+  /* Expertise cards — adapted from the owner's "services" reference: a pill,
+     a round icon, title, description, then a visual at the bottom. The
+     first card is highlighted. Vertical grid, no horizontal scrolling. */
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .skill {
+    --card-bg: var(--surface);
+    --card-text: var(--text);
+    --card-muted: var(--text-2);
+    --card-line: var(--border);
+    --tag-bg: var(--surface-2);
+    --link: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    padding: var(--s-3);
+    border: 1px solid var(--card-line);
+    border-radius: 20px;
+    background: var(--card-bg);
+    color: var(--card-text);
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.03), 0 24px 50px -36px rgb(0 0 0 / 0.55);
+    transition:
+      transform 300ms var(--ease),
+      border-color var(--fast),
+      box-shadow 300ms var(--ease);
+  }
+
+  .skill:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--card-line));
+    box-shadow: 0 30px 60px -34px rgb(0 0 0 / 0.6);
+  }
+
+  /* Highlighted first card (the reference's filled card), in the site's orange. */
+  .skill--featured {
+    --card-bg: linear-gradient(160deg, #ff8a2a 0%, #fd6f00 45%, #d65a00 100%);
+    --card-text: #111111;
+    --card-muted: rgb(17 17 17 / 0.82);
+    --card-line: rgb(255 255 255 / 0.25);
+    --tag-bg: rgb(255 255 255 / 0.22);
+    --link: #111111;
+    border-color: transparent;
+  }
+
+  .skill-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-1);
+  }
+
+  .skill-pill {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid color-mix(in srgb, var(--card-text) 30%, transparent);
+    border-radius: 999px;
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    color: var(--card-muted);
+  }
+
+  .skill-icon {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    background: var(--tag-bg);
+    color: var(--accent-text);
+  }
+
+  .skill--featured .skill-icon {
+    background: #fff;
+    color: #111;
+  }
+
+  .skill-icon :global(svg) {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .skill h4 {
+    margin-top: var(--s-1);
+    font-size: var(--step-2);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .skill-desc {
+    color: var(--card-muted);
+    font-size: var(--step--1);
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .skill-tags li {
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: var(--tag-bg);
+    font-size: var(--step--2);
+    font-weight: 700;
+    color: var(--card-text);
+  }
+
+  .applied {
+    display: grid;
+    gap: var(--s-1);
+    padding-top: var(--s-1);
+    border-top: 1px solid var(--card-line);
+  }
+
+  .applied-kind {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--card-muted);
+  }
+
+  .applied-group ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.9rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .applied-group a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    font-weight: 700;
+    font-size: var(--step--1);
+    color: var(--link);
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  }
+
+  .skill:not(.skill--featured) .applied-group a:hover {
+    color: var(--accent-text);
+  }
+
+  .skill :global(.viz) {
+    margin-top: auto;
+  }
+
+  .applied + :global(.viz),
+  .skill-tags + :global(.viz) {
+    margin-top: auto;
+  }
+
+  @media (max-width: 63.99rem) {
+    .skill-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .frame {
+      max-width: 18rem;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .skill-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

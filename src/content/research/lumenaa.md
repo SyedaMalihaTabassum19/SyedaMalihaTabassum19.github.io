@@ -1,5 +1,6 @@
 ---
 title: LUMENAA — Language-Unified Multimodal Edge-Native Agent for Assistive Perception
+short: LUMENAA
 shortTitle: "LUMENAA: an edge-native multimodal agent for assistive perception"
 status: in-progress
 type: research-project

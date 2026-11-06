@@ -3,7 +3,7 @@
 // moves between https://<user>.github.io/ and https://<user>.github.io/<repo>/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { BASE, DIST, assertBuilt, htmlFiles, read, servedPath, walk } from './helpers.mjs';
 
@@ -84,6 +84,47 @@ test('external links that open a new tab are isolated with rel="noopener"', () =
   assert.deepEqual(problems, []);
 });
 
+test('old section URLs still exist and forward to the one-page sections', () => {
+  for (const [page, section] of [
+    ['about', 'about'],
+    ['research', 'research'],
+    ['projects', 'projects'],
+    ['experience', 'experience'],
+    ['education', 'education'],
+    ['skills', 'skills'],
+    ['contact', 'contact'],
+  ]) {
+    const html = read(join(DIST, page, 'index.html'));
+    assert.match(html, new RegExp(`http-equiv="refresh" content="0; url=${BASE}#${section}"`), `${page}/ redirect`);
+    assert.match(read(join(DIST, 'index.html')), new RegExp(`id="${section}"`), `#${section} exists on home`);
+  }
+});
+
+test('former research and project pages forward to their inline entries', () => {
+  const home = read(join(DIST, 'index.html'));
+  for (const [dir, prefix] of [
+    ['research', 'research'],
+    ['projects', 'project'],
+  ]) {
+    const ids = readdirSync(join('src', 'content', dir))
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => f.slice(0, -3));
+    for (const id of ids) {
+      const html = read(join(DIST, dir, id, 'index.html'));
+      assert.match(html, new RegExp(`content="0; url=${BASE}#${prefix}-${id}"`), `${dir}/${id}/ redirect`);
+      assert.match(html, /<meta name="robots" content="noindex"/, `${dir}/${id}/ is noindex`);
+      assert.match(home, new RegExp(`id="${prefix}-${id}"`), `#${prefix}-${id} exists on home`);
+    }
+  }
+});
+
+test('the home page has every section anchor used by the navigation', () => {
+  const home = read(join(DIST, 'index.html'));
+  for (const id of ['home', 'about', 'skills', 'research', 'projects', 'experience', 'education', 'contact']) {
+    assert.match(home, new RegExp(`id="${id}"`), `#${id}`);
+  }
+});
+
 test('a 404 page exists at the artifact root for GitHub Pages', () => {
   assert.ok(existsSync(join(DIST, '404.html')), 'dist/404.html is missing');
 });
@@ -115,6 +156,6 @@ test('canonical URLs and sitemap use the deployment URL when it is known', { ski
   assert.match(home, new RegExp(`<meta property="og:image" content="${origin}${BASE}og/default.png"`));
   assert.ok(existsSync(join(DIST, 'sitemap-index.xml')), 'sitemap-index.xml missing');
   const sitemap = walk().filter((f) => /sitemap-\d+\.xml$/.test(f)).map(read).join('\n');
-  assert.match(sitemap, new RegExp(`<loc>${origin}${BASE}research/camdet/</loc>`));
-  assert.doesNotMatch(sitemap, /404/);
+  assert.match(sitemap, new RegExp(`<loc>${origin}${BASE}</loc>`));
+  assert.doesNotMatch(sitemap, /404|\/research\/|\/projects\/|\/about\//, 'redirect pages are not in the sitemap');
 });

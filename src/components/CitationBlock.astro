@@ -32,12 +32,12 @@ const bibtexId = `bibtex-${id}`;
 <style>
   .citation {
     display: grid;
-    gap: var(--space-xs);
-    padding: var(--space-m);
-    border: 1px solid var(--line);
+    gap: var(--s-1);
+    padding: var(--s-3);
+    border: 1px solid var(--border);
     border-left: 3px solid var(--accent);
     border-radius: var(--radius);
-    background: var(--bg-elev);
+    background: var(--surface);
   }
 
   .citation-text {
@@ -80,7 +80,7 @@ const bibtexId = `bibtex-${id}`;
     font-family: var(--font-mono-stack);
     font-size: 0.9rem;
     line-height: 1;
-    transition: transform var(--dur) var(--ease-out);
+    transition: transform var(--fast) var(--ease);
   }
 
   .bibtex[open] summary::before {
@@ -92,7 +92,7 @@ const bibtexId = `bibtex-${id}`;
     padding: 1rem;
     overflow-x: auto;
     border-radius: var(--radius);
-    background: var(--bg-sunk);
+    background: var(--bg-alt);
     font-family: var(--font-mono-stack);
     font-size: var(--step--2);
     line-height: 1.7;

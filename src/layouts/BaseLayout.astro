@@ -41,7 +41,7 @@ const imageUrl = absoluteUrl(image, site);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="dark light" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta name="author" content={profile.name} />
@@ -63,17 +63,17 @@ const imageUrl = absoluteUrl(image, site);
     <meta name="twitter:description" content={description} />
     {imageUrl && <meta name="twitter:image" content={imageUrl} />}
 
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f4ea" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b1316" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f4ef" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101010" />
     <link rel="icon" type="image/svg+xml" href={withBase('favicon.svg')} />
     <link rel="icon" type="image/png" sizes="32x32" href={withBase('favicon-32.png')} />
     <link rel="apple-touch-icon" href={withBase('apple-touch-icon.png')} />
 
-    <Font cssVariable="--font-display" preload={[{ weight: 400, style: 'normal' }]} />
-    <Font cssVariable="--font-body" preload={[{ weight: 400, style: 'normal' }]} />
+    <Font cssVariable="--font-sans" preload={[{ weight: 400, style: 'normal' }, { weight: 700, style: 'normal' }]} />
     <Font cssVariable="--font-mono" />
 
-    {/* Applies the saved theme before first paint (no flash) and marks JS as available. */}
+    {/* Applies the saved theme before first paint (no flash) and marks JS as available.
+        Dark is the default unless the system asks for light. */}
     <script is:inline>
       (() => {
         const root = document.documentElement;
@@ -83,8 +83,8 @@ const imageUrl = absoluteUrl(image, site);
           saved = localStorage.getItem('theme');
         } catch {}
         if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
-        const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.dataset.effectiveTheme = root.dataset.theme || (dark ? 'dark' : 'light');
+        const light = window.matchMedia('(prefers-color-scheme: light)').matches;
+        root.dataset.effectiveTheme = root.dataset.theme || (light ? 'light' : 'dark');
       })();
     </script>
 
@@ -125,19 +125,20 @@ const imageUrl = absoluteUrl(image, site);
     place-items: center;
     width: 2.875rem;
     height: 2.875rem;
-    border-radius: 50%;
-    border: 1px solid var(--line-strong);
-    background: var(--bg-elev);
-    color: var(--ink);
+    border-radius: var(--radius-s);
+    background: var(--accent);
+    color: var(--on-accent);
     box-shadow: var(--shadow);
     transition:
-      opacity var(--dur),
-      transform var(--dur) var(--ease-out),
+      opacity var(--fast),
+      transform var(--fast) var(--ease),
+      background-color var(--fast),
       visibility 0s;
   }
 
   .to-top:hover {
-    color: var(--accent);
+    color: var(--on-accent);
+    background: var(--accent-hover);
     transform: translateY(-2px);
   }
 
@@ -147,8 +148,8 @@ const imageUrl = absoluteUrl(image, site);
     visibility: hidden;
     transform: translateY(8px);
     transition:
-      opacity var(--dur),
-      transform var(--dur) var(--ease-out),
-      visibility 0s linear var(--dur);
+      opacity var(--fast),
+      transform var(--fast) var(--ease),
+      visibility 0s linear var(--fast);
   }
 </style>

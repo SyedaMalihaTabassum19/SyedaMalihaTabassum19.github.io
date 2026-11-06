@@ -1,5 +1,6 @@
 ---
 title: "Less Than Meets the Eye: Action-Set Identifiability and Principled Abstention for 3D Physical Geometry"
+short: Action-set identifiability
 shortTitle: Action-set identifiability and principled abstention for 3D physical geometry
 status: under-review
 type: conference-paper

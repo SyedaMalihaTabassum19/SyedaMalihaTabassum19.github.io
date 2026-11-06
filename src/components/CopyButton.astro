@@ -35,8 +35,8 @@ const { label, what, text, target, class: className } = Astro.props;
   }
 
   .copy-btn[data-state='done'] {
-    --btn-border: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
   }
 
   .copy-btn[data-state='done'] :global(.copy-done) {
@@ -48,7 +48,7 @@ const { label, what, text, target, class: className } = Astro.props;
   }
 
   .copy-btn[data-state='failed'] {
-    --btn-border: var(--status-review);
+    border-color: var(--text-2);
   }
 </style>
 

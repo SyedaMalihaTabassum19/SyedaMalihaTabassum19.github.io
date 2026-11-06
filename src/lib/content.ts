@@ -69,17 +69,17 @@ export async function resolveEvidence(usedIn?: {
   for (const ref of usedIn.projects) {
     const entry = await getEntry(ref);
     if (!entry) throw new Error(`Unknown project reference "${ref.id}" in skills.json`);
-    out.push({ label: entry.data.title, href: `projects/${entry.id}/`, kind: 'Project' });
+    out.push({ label: entry.data.short ?? entry.data.title, href: `#project-${entry.id}`, kind: 'Project' });
   }
   for (const ref of usedIn.research) {
     const entry = await getEntry(ref);
     if (!entry) throw new Error(`Unknown research reference "${ref.id}" in skills.json`);
-    out.push({ label: entry.data.shortTitle ?? entry.data.title, href: `research/${entry.id}/`, kind: 'Research' });
+    out.push({ label: entry.data.short ?? entry.data.shortTitle ?? entry.data.title, href: `#research-${entry.id}`, kind: 'Research' });
   }
   for (const ref of usedIn.experience) {
     const entry = await getEntry(ref);
     if (!entry) throw new Error(`Unknown experience reference "${ref.id}" in skills.json`);
-    out.push({ label: `${entry.data.role}, ${entry.data.organisation}`, href: `experience/#${entry.id}`, kind: 'Experience' });
+    out.push({ label: entry.data.short ?? `${entry.data.role}, ${entry.data.organisation}`, href: `#${entry.id}`, kind: 'Experience' });
   }
   return out;
 }

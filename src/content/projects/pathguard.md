@@ -1,5 +1,6 @@
 ---
 title: "PathGuard: Discrete Logic-Driven Obstacle Avoider"
+short: PathGuard
 tagline: Autonomous navigation without a microcontroller — decisions made in discrete logic.
 summary: Built a microcontroller-free autonomous navigation system using discrete logic circuits and sensor-driven control to study low-level robotic decision-making.
 start: 2025-02

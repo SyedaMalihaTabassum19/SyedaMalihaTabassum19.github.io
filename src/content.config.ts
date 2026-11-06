@@ -32,6 +32,8 @@ const research = defineCollection({
     .object({
       title: z.string(),
       shortTitle: z.string().optional(),
+      /** Very short name for compact links, e.g. "CAMDet", "LUMENAA". */
+      short: z.string().optional(),
       status: z.enum(ids(researchStatuses)),
       type: z.enum(ids(researchTypes)),
       topics: z.array(z.enum(ids(researchTopics))).min(1),
@@ -88,6 +90,8 @@ const projects = defineCollection({
   schema: ({ image }) =>
     z.object({
       title: z.string(),
+      /** Very short name for compact links, e.g. "WeHeal". */
+      short: z.string().optional(),
       /** One-line description for lists. */
       tagline: z.string(),
       /** Fuller description, taken from the CV. */
@@ -98,6 +102,15 @@ const projects = defineCollection({
       /** Technologies named in the source material — do not pad this list. */
       technologies: z.array(z.string()).default([]),
       links: z.array(link).default([]),
+      /** Real image shown on the project card (photo, screenshot, video frame). */
+      cover: z
+        .object({
+          src: image(),
+          alt: z.string().min(1),
+          /** e.g. "Frame from the demo video by Reshad Ul Karim". */
+          credit: z.string().optional(),
+        })
+        .optional(),
       /**
        * Real media only. Images go in src/assets/projects/<project>/ and are
        * optimised automatically; YouTube videos use a click-to-load player.
@@ -135,6 +148,8 @@ const experience = defineCollection({
   schema: z.object({
     id: z.string(),
     role: z.string(),
+    /** Very short name for compact links, e.g. "Data Structures TA". */
+    short: z.string().optional(),
     organisation: z.string(),
     unit: z.string().optional(),
     kind: z.enum(ids(experienceKinds)),
@@ -170,6 +185,16 @@ const awards = defineCollection({
     category: z.enum(ids(awardCategories)),
     start: yearMonth.optional(),
     date: yearMonth,
+    /**
+     * Certificate or proof. A Google Drive share link ("…/file/d/<id>/view")
+     * opens in an in-page preview; visitors can open it in Drive to download.
+     */
+    document: z
+      .object({
+        url: z.url(),
+        label: z.string().default('View certificate'),
+      })
+      .optional(),
     order: z.number().default(100),
   }),
 });

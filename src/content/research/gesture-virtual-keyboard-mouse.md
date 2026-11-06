@@ -1,5 +1,6 @@
 ---
 title: Vision-based Hand Gesture Virtual Keyboard-Mouse Framework with Bilingual Next-word Prediction
+short: Gesture keyboard–mouse
 shortTitle: Hand-gesture virtual keyboard–mouse with bilingual next-word prediction
 status: published
 type: conference-paper

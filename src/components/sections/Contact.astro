@@ -1,0 +1,156 @@
+---
+// Contact: strong typographic invitation, prominent email action, profiles,
+// CV. No form — there is no delivery service configured.
+import CopyButton from '@/components/CopyButton.astro';
+import Icon from '@/components/Icon.astro';
+import { profile } from '@/data/profile';
+import { withBase } from '@/lib/url';
+---
+
+<section class="section contact" id="contact" aria-labelledby="contact-title">
+  <div class="wrap">
+    <div class="frame" data-reveal>
+      <p class="eyebrow eyebrow--accent">Contact</p>
+      <h2 id="contact-title">Let’s talk <span class="accent-grad">research</span>.</h2>
+      <p class="lead">
+        PhD opportunities, research conversations or collaboration — email is the best way to reach me. I’m happy to share
+        more detail about any project or manuscript on this page.
+      </p>
+      {
+        profile.availability && (
+          <p class="availability">
+            <span class="dot" aria-hidden="true" />
+            {profile.availability.label}
+          </p>
+        )
+      }
+
+      <a class="email" href={`mailto:${profile.email}`}>
+        <Icon name="mail" size={22} />
+        <span>{profile.email}</span>
+      </a>
+
+      <div class="actions">
+        <CopyButton label="Copy email" what="Email address" text={profile.email} />
+        {
+          profile.cv && (
+            <a class="btn btn--small" href={withBase(profile.cv.path)} download>
+              <Icon name="download" /> Download CV
+            </a>
+          )
+        }
+        <ul class="socials" aria-label="Profiles">
+          {
+            profile.links.map((link) => (
+              <li>
+                <a class="icon-circle" href={link.url} target="_blank" rel="noopener noreferrer me" aria-label={`${link.label} (opens in a new tab)`}>
+                  <Icon name={link.icon} />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .frame {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--s-2);
+    max-width: 52rem;
+    margin-inline: auto;
+    padding: clamp(2.5rem, 1.5rem + 4vw, 4.5rem) clamp(1.25rem, 0.5rem + 4vw, 4rem);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    background:
+      radial-gradient(70% 60% at 50% 0%, var(--accent-soft), transparent 70%),
+      var(--surface);
+    text-align: center;
+    overflow: hidden;
+  }
+
+  h2 {
+    font-size: clamp(2.5rem, 1.5rem + 4.5vw, 5rem);
+    font-weight: 900;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+
+  .accent-grad {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .lead {
+    max-width: 52ch;
+  }
+
+  .availability {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    font-size: var(--step--1);
+    color: var(--text-2);
+  }
+
+  .dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .email {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 100%;
+    margin-top: var(--s-2);
+    padding: 0.95rem 1.5rem;
+    border-radius: var(--radius-s);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: clamp(1rem, 0.85rem + 0.8vw, 1.35rem);
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      background-color var(--fast),
+      transform var(--fast) var(--ease);
+  }
+
+  .email span {
+    overflow-wrap: anywhere;
+  }
+
+  .email:hover {
+    background: var(--accent-hover);
+    color: var(--on-accent);
+  }
+
+  .email:active {
+    transform: translateY(1px);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: var(--s-2);
+    margin-top: var(--s-1);
+  }
+
+  .socials {
+    display: flex;
+    gap: var(--s-1);
+    padding: 0;
+    list-style: none;
+  }
+</style>

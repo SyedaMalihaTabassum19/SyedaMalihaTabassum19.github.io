@@ -3,9 +3,18 @@
 Academic and professional portfolio site. Static [Astro](https://astro.build) + TypeScript,
 hosted on GitHub Pages. No server, database, tracking or API keys.
 
-- **Pages:** Home, About, Research & Publications (+ a page per entry), Projects (+ a case
-  study per project), Experience, Education & Recognition, Skills, Contact, 404. A Writing
-  section appears automatically once you add a post.
+- **One scrolling page:** Home `#home` → About & Skills `#about` → Research & Publications
+  `#research` → Projects `#projects` → Experience `#experience` → Education & Recognition
+  `#education` → Contact `#contact`. A sticky top bar jumps between sections and underlines
+  the current one.
+- **Details open inline:** each research entry has a "Details" panel, and each project has an
+  "Explore project" panel that opens under its card. Panels can be linked directly
+  (`#research-<id>`, `#project-<id>`). Old addresses (`/about/`, `/research/camdet/`,
+  `/projects/weheal/` …) forward to the matching place on the page. A Writing section
+  appears automatically once you add a post.
+- **Design (v3):** dark/orange visual language adapted from the Figma Community file
+  *Personal website | Portfolio* (see `REDESIGN_PLAN.md`), with a matching light theme. Lato
+  type, subtle reveals, and no motion for visitors who prefer reduced motion.
 - **Features:** light/dark theme (follows the system, remembers your choice), publication
   status/topic filters and search, copy citation / BibTeX / email, click-to-load video demos,
   image gallery with lightbox (when images exist), redacted public CV download.
@@ -16,9 +25,8 @@ hosted on GitHub Pages. No server, database, tracking or API keys.
 
 ### Requirements
 
-- **Node.js 22.23.4 or newer — Node 24 LTS recommended.** Check with `node --version`.
-  This computer currently has **Node 22.14.0, which is too old** for the current Astro release.
-  Install the "LTS" version from <https://nodejs.org/>, then open a new terminal.
+- **Node.js 22.23.4 or newer — Node 24 LTS recommended.** Check with `node --version`
+  (this computer has Node 24.22.2, which is fine).
 
 ### Commands
 
@@ -58,12 +66,14 @@ the build with a message naming the file.
 | Awards and competitions                      | `src/data/awards.json`                                                                   |
 | Skills and where they were used              | `src/data/skills.json`                                                                   |
 | Topic, category and status names             | `src/data/taxonomy.ts`                                                                   |
-| Navigation                                   | `src/data/navigation.ts`                                                                 |
-| About page text                              | `src/pages/about.astro`                                                                  |
+| Top-bar sections (labels, order)             | `src/data/navigation.ts`                                                                 |
+| About section text                           | `src/components/sections/About.astro`                                                    |
+| Layout of any section                        | `src/components/sections/<Section>.astro` (order in `src/pages/index.astro`)            |
+| "Open to PhD positions" line                 | `availability` in `src/data/profile.ts` (`null` hides it everywhere)                     |
 | Colours, fonts, spacing                      | `src/styles/global.css` (colours), `astro.config.mjs` (fonts)                             |
 
-The file name becomes the page address: `src/content/research/camdet.md` →
-`/research/camdet/`.
+The file name becomes the entry's link on the page: `src/content/research/camdet.md` →
+`#research-camdet`, and `src/content/projects/weheal.md` → `#project-weheal`.
 
 ### Add a research entry
 
@@ -97,9 +107,15 @@ Copy an existing file in `src/content/projects/`. Media is optional and only sho
 exists:
 
 1. Put images in `src/assets/projects/<project-id>/` (PNG/JPG/WebP — Astro optimises them).
-2. Reference them in the project's front matter:
+2. Reference them in the project's front matter. `cover` is the image on the project card
+   (16:9 works best); without one, the card shows an abstract decorative graphic. `media`
+   items appear inside the "Explore project" panel:
 
 ```yaml
+cover:
+  src: ../../assets/projects/aruco-service-bot/demo-frame.jpg
+  alt: The service bot on a grey floor with a gripper arm and a printed ArUco marker
+  credit: Frame from the demo video published by Reshad Ul Karim   # optional
 media:
   - type: image
     src: ../../assets/projects/aruco-service-bot/robot.jpg
@@ -115,14 +131,52 @@ Images get a gallery with an accessible lightbox. YouTube videos use a privacy-f
 that loads nothing from YouTube until the visitor presses Play.
 
 Credit collaborators in `credits:` and mark links on someone else's account with `hostedBy:`.
+Anything written below the closing `---` (for example a `## My role` section) appears in the
+project's panel.
 
-### Add a photo of yourself
+### Add certificate links (Recognition)
 
-1. Save it as `src/assets/portrait.jpg` (portrait orientation, at least 800px wide).
-2. In `src/data/profile.ts`, add `import portraitImage from '../assets/portrait.jpg';` at the
-   top and set `portrait: { src: portraitImage, alt: 'Syeda Maliha Tabassum' }`.
+Each award in `src/data/awards.json` can have a certificate. Add a `document` with a Google Drive
+share link, for example:
 
-Until then the About page shows the abstract monogram mark.
+```json
+{
+  "id": "deans-vc-list",
+  "title": "Dean’s List and Vice Chancellor’s List",
+  "document": { "url": "https://drive.google.com/file/d/FILE_ID/view?usp=sharing" },
+  ...
+}
+```
+
+A glassy **View certificate** button then appears beside that award. It opens an in-page preview,
+with **Open in Google Drive** for downloading. In Drive, set the file's sharing to
+**Anyone with the link → Viewer**, or visitors won't be able to see it. Optional:
+`"label": "View letter"` changes the button text. Awards without a `document` show no button.
+
+### Change your photos
+
+Two transparent cut-outs are used:
+
+| Where | File | Made from |
+| --- | --- | --- |
+| Hero (top of page) | `src/assets/portrait-cutout.png` | `Formal picture in suit.jpg` |
+| About (on the arch, in colour) | `src/assets/about-portrait.png` | `890187627_…_n.jpg` |
+
+`scripts/make-portrait-cutout.py` removes the background with an AI matting model
+(BiRefNet-portrait, which handles hair precisely), cleans the background's colour out of the
+hair edges, applies a gentle sharpen/contrast boost, and fades the bottom edge. Its tools stay
+out of the project in a throwaway Python environment:
+
+```bash
+python -m venv .venv-photo
+.venv-photo\Scripts\pip install "rembg[cpu]" opencv-python-headless
+.venv-photo\Scripts\python scripts/make-portrait-cutout.py "Formal picture in suit.jpg" src/assets/portrait-cutout.png --max-width 1600 --fade 0.16 --sharpen 0.2
+.venv-photo\Scripts\python scripts/make-portrait-cutout.py "my-about-photo.jpg" src/assets/about-portrait.png --max-width 1100 --fade 0.08
+```
+
+The first run downloads the model (about 900 MB). Any background works. Alt text for both
+photos is in `src/data/profile.ts` (`portrait`, `aboutPortrait`). `.venv-photo/` is
+git-ignored.
 
 ### Add GitHub, Google Scholar or ORCID
 
@@ -263,18 +317,24 @@ Git Bash rewrites `/portfolio` into a Windows path. PowerShell is unaffected:
 ```
 .github/workflows/deploy.yml  GitHub Pages build + deploy
 site.config.mjs               Site URL and base path (one place)
-astro.config.mjs              Astro settings, fonts, sitemap
+astro.config.mjs              Astro settings, fonts (Lato, JetBrains Mono), sitemap
 public/                       Files copied as-is: CV, favicon, social image
 scripts/                      CV redaction, social card template, verify script
+src/assets/                   Images that Astro optimises (project photos, portrait)
 src/content/                  Research, projects, writing (Markdown)
 src/data/                     Profile, experience, education, awards, skills, vocabularies
 src/content.config.ts         Schemas that validate all content
-src/components/               Reusable UI pieces
+src/components/sections/      The page sections: Hero, About (+ skills), Research, Projects,
+                              Experience, Education (& recognition), Contact
+src/components/               Reusable pieces (research row, filters, citation, video…)
 src/layouts/BaseLayout.astro  <head>, header, footer, theme script
-src/pages/                    One file per route
-src/scripts/                  Small client-side scripts (theme, menu, filters)
+src/pages/index.astro         The single page
+src/pages/…                   Redirects for old URLs, 404, optional Writing
+src/scripts/                  Small client-side scripts (theme, menu, expanders, filters)
 src/styles/global.css         Design tokens and shared styles
 tests/                        Build-output tests (node:test, no extra dependencies)
+REDESIGN_PLAN.md              Reference observations, tokens, layout and motion specs
 CONTENT_TODO.md               Missing information and editorial decisions to review
 CLAUDE.md                     Conventions for editing this project with Claude Code
 ```
+

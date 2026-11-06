@@ -65,7 +65,7 @@ const large = await Promise.all(images.map((img) => getImage({ src: img.src, wid
     padding: 0;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
-    gap: var(--space-s);
+    gap: var(--s-2);
   }
 
   .thumbs.single {
@@ -76,12 +76,12 @@ const large = await Promise.all(images.map((img) => getImage({ src: img.src, wid
     display: block;
     overflow: hidden;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
+    border: 1px solid var(--border);
   }
 
   .thumbs :global(img) {
     width: 100%;
-    transition: transform 600ms var(--ease-out);
+    transition: transform 600ms var(--ease);
   }
 
   .thumbs a:hover :global(img) {
@@ -91,17 +91,17 @@ const large = await Promise.all(images.map((img) => getImage({ src: img.src, wid
   figcaption {
     margin-top: 0.5rem;
     font-size: var(--step--1);
-    color: var(--ink-soft);
+    color: var(--text-2);
   }
 
   .lightbox {
     width: min(96vw, 1400px);
     max-height: 96vh;
     padding: 0;
-    border: 1px solid var(--line);
+    border: 1px solid var(--border);
     border-radius: var(--radius-l);
-    background: var(--bg-elev);
-    color: var(--ink);
+    background: var(--surface);
+    color: var(--text);
   }
 
   .lightbox::backdrop {
@@ -111,7 +111,7 @@ const large = await Promise.all(images.map((img) => getImage({ src: img.src, wid
   .lightbox-inner {
     display: grid;
     gap: 0.75rem;
-    padding: var(--space-s);
+    padding: var(--s-2);
   }
 
   .lightbox img {

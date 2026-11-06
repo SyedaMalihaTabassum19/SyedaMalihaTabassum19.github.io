@@ -2,6 +2,7 @@
   {
     "id": "grameenphone-nextern",
     "role": "NEXTERN",
+    "short": "NEXTERN, Grameenphone",
     "organisation": "Grameenphone Ltd.",
     "unit": "Technology Infrastructure Management, Technology",
     "kind": "industry",
@@ -16,6 +17,7 @@
   {
     "id": "dristee-research-assistant",
     "role": "Undergraduate Research Assistant — DRISTEE",
+    "short": "DRISTEE research",
     "organisation": "BRAC University",
     "unit": "RSGI Grant 2025",
     "kind": "research",
@@ -30,6 +32,7 @@
   {
     "id": "data-structures-ta",
     "role": "Undergraduate Teaching Assistant — Data Structures",
+    "short": "Data Structures TA",
     "organisation": "BRAC University",
     "unit": "Department of Computer Science and Engineering",
     "kind": "teaching",
@@ -44,6 +47,7 @@
   {
     "id": "mongoltori-mars-rover",
     "role": "Core Team Member — Vision, Networking, and Mechanical Systems",
+    "short": "Mars rover team",
     "organisation": "BRAC University Mars Rover Project (Mongoltori)",
     "kind": "engineering-team",
     "start": "2023-09",

@@ -65,18 +65,18 @@ const icons: Record<Link['kind'], IconName> = {
     gap: 0.9rem;
     min-height: 3.5rem;
     padding: 0.6rem 0.9rem;
-    border: 1px solid var(--line);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: var(--bg-elev);
+    background: var(--surface);
     text-decoration: none;
     transition:
-      border-color var(--dur),
-      transform var(--dur) var(--ease-out);
+      border-color var(--fast),
+      transform var(--fast) var(--ease);
   }
 
   a:hover {
     border-color: var(--accent);
-    color: var(--ink);
+    color: var(--text);
     transform: translateX(2px);
   }
 
@@ -86,7 +86,7 @@ const icons: Record<Link['kind'], IconName> = {
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 50%;
-    background: var(--wash);
+    background: var(--accent-soft);
     color: var(--accent);
     flex: none;
   }
@@ -111,7 +111,7 @@ const icons: Record<Link['kind'], IconName> = {
   a :global(.go) {
     flex: none;
     color: var(--muted);
-    transition: transform var(--dur) var(--ease-out), color var(--dur);
+    transition: transform var(--fast) var(--ease), color var(--fast);
   }
 
   a:hover :global(.go) {

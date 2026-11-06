@@ -1,5 +1,6 @@
 ---
 title: An Upstream-Routed Adaptive Pipeline for Non-Invasive PCOS Screening and Phase Tracking
+short: PCOS screening
 shortTitle: Adaptive pipeline for non-invasive PCOS screening and phase tracking
 status: in-progress
 type: research-project

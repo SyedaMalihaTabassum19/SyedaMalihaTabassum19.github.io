@@ -1,5 +1,6 @@
 ---
 title: Robust Follicle Segmentation in 2D Ultrasound via Low-Rank Adapted MedSAM
+short: Follicle segmentation
 shortTitle: Follicle segmentation in 2D ultrasound with low-rank adapted MedSAM
 status: in-progress
 type: research-project

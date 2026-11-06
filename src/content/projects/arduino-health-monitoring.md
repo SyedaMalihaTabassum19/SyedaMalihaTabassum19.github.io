@@ -1,5 +1,6 @@
 ---
 title: Arduino-Based Multi-Sensor Health Monitoring and Fall Detection
+short: Health monitor
 tagline: Wearable health monitoring and fall detection with GSM/GPS alerting.
 summary: Developed an embedded framework integrating biomedical sensors with sensor fusion and microcontroller coordination. Implemented communication and alert pipelines using GSM/GPS and I2C for wearable health monitoring.
 start: 2025-06

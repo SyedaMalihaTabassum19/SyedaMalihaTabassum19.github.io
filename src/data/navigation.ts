@@ -1,18 +1,27 @@
-// Main navigation. `href` is relative to the site root (base path is added
-// automatically). The Writing link is added automatically once a post exists.
+// Single-page navigation. Each item jumps to a section of the home page
+// (`id` must match the section's id). The base path is added automatically.
 export interface NavItem {
   label: string;
-  href: string;
+  /** Section id on the home page. */
+  id: string;
+  /** Shown in the compact desktop bar (all items appear in the mobile menu and footer). */
+  primary: boolean;
 }
 
-export const navigation: NavItem[] = [
-  { label: 'About', href: 'about/' },
-  { label: 'Research', href: 'research/' },
-  { label: 'Projects', href: 'projects/' },
-  { label: 'Experience', href: 'experience/' },
-  { label: 'Education', href: 'education/' },
-  { label: 'Skills', href: 'skills/' },
-  { label: 'Contact', href: 'contact/' },
+export const sections: NavItem[] = [
+  { label: 'Home', id: 'home', primary: true },
+  { label: 'About', id: 'about', primary: true },
+  { label: 'Research', id: 'research', primary: true },
+  { label: 'Projects', id: 'projects', primary: true },
+  { label: 'Experience', id: 'experience', primary: true },
+  { label: 'Education', id: 'education', primary: false },
+  { label: 'Contact', id: 'contact', primary: true },
 ];
 
-export const writingNavItem: NavItem = { label: 'Writing', href: 'writing/' };
+/**
+ * Which desktop nav item lights up while a section is in view.
+ * Education has no desktop item, so it highlights Experience.
+ */
+export const navTargetFor: Record<string, string> = {
+  education: 'experience',
+};
