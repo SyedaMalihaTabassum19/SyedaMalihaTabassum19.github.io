@@ -83,7 +83,6 @@ const rows = [
     left: 29%;
     top: 53%;
     width: 270px;
-    translate: -50% -50%;
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid rgb(255 255 255 / 0.18);
@@ -159,6 +158,12 @@ const rows = [
   }
 
 
+  /* Kept in its own rule: the CSS minifier drops `translate` when it shares a rule
+     with a fixed `transform` (see tests/css.test.mjs). */
+  .stage > :is(.win, .sheet) {
+    translate: -50% -50%;
+  }
+
   /* ── CV sheet ── */
   .sheet {
     position: absolute;
@@ -166,7 +171,6 @@ const rows = [
     top: 52%;
     width: 190px;
     padding: 0 14px 14px;
-    translate: -50% -50%;
     overflow: hidden;
     border-radius: 8px;
     background: #fbf8f3;

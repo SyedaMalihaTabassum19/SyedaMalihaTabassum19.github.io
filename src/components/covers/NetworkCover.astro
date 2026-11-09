@@ -168,7 +168,6 @@ const roofLabel: Record<Kind, number> = { hospital: 66, institute: 70, emergency
     position: absolute;
     left: 54%;
     top: 52%;
-    scale: 0.72;
     width: 1000px;
     height: 720px;
     margin: -360px 0 0 -500px;
@@ -179,6 +178,12 @@ const roofLabel: Record<Kind, number> = { hospital: 66, institute: 70, emergency
       repeating-linear-gradient(0deg, rgb(140 180 255 / 0.08) 0 1px, transparent 1px 36px),
       repeating-linear-gradient(90deg, rgb(140 180 255 / 0.08) 0 1px, transparent 1px 36px);
     border-radius: 32px;
+  }
+
+  /* Kept in its own rule: the CSS minifier drops `scale` when it shares a rule
+     with a fixed `transform` (see tests/css.test.mjs). */
+  .floor:where(.cover-scene *) {
+    scale: 0.72;
   }
 
   /* ── Links ── */

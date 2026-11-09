@@ -74,7 +74,6 @@ const obstacles = [
     position: absolute;
     left: 41%;
     top: 49%;
-    scale: 0.98;
     width: 600px;
     height: 600px;
     margin: -300px 0 0 -300px;
@@ -85,6 +84,12 @@ const obstacles = [
       repeating-linear-gradient(90deg, rgb(120 200 255 / 0.12) 0 1px, transparent 1px 30px);
     border-radius: 24px;
     box-shadow: inset 0 0 0 1px rgb(120 200 255 / 0.2);
+  }
+
+  /* Kept in its own rule: the CSS minifier drops `scale` when it shares a rule
+     with a fixed `transform` (see tests/css.test.mjs). */
+  .floor:where(.cover-scene *) {
+    scale: 0.98;
   }
 
   /* The route the car drives */

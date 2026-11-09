@@ -171,8 +171,13 @@ const tones = ['lime', 'sun', 'sky', 'lilac', 'coral'];
   }
 
   .award:hover {
-    rotate: 0deg;
     transform: translateY(-6px) scale(1.02);
+  }
+
+  /* Kept in its own rule: the CSS minifier drops `rotate` when it shares a rule
+     with a fixed `transform` (see tests/css.test.mjs). */
+  .award:where(:hover) {
+    rotate: 0deg;
   }
 
   .award--sun {
