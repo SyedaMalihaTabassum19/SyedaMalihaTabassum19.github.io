@@ -10,7 +10,7 @@ export interface ProfileLink {
   url: string;
   /** Short handle shown next to the label, e.g. "in/username". */
   handle: string;
-  icon: 'linkedin' | 'github' | 'scholar' | 'orcid' | 'mail' | 'link';
+  icon: 'linkedin' | 'github' | 'scholar' | 'orcid' | 'researchgate' | 'mail' | 'link';
 }
 
 export interface Profile {
@@ -72,6 +72,24 @@ export const profile: Profile = {
       url: 'https://github.com/SyedaMalihaTabassum19',
       handle: 'SyedaMalihaTabassum19',
       icon: 'github',
+    },
+    {
+      label: 'Google Scholar',
+      url: 'https://scholar.google.com/citations?user=GRSn3ngAAAAJ&hl=en',
+      handle: 'Google Scholar',
+      icon: 'scholar',
+    },
+    {
+      label: 'ORCID',
+      url: 'https://orcid.org/0009-0001-1246-2574',
+      handle: '0009-0001-1246-2574',
+      icon: 'orcid',
+    },
+    {
+      label: 'ResearchGate',
+      url: 'https://www.researchgate.net/profile/Syeda-Maliha-Tabassum',
+      handle: 'Syeda-Maliha-Tabassum',
+      icon: 'researchgate',
     },
   ],
   availability: {

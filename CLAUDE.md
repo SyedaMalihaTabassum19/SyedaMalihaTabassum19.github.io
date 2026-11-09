@@ -28,8 +28,8 @@ gives directly are the **only** factual sources.
   weaken those rules.
 - **Under-review / in-progress summaries** stay within what the CV states. Don't add
   methods, datasets or numbers from elsewhere.
-- **Don't invent profile URLs** (Scholar, ORCID…). Her confirmed GitHub is
-  `SyedaMalihaTabassum19`. Repos under `Reshad-Ul-Karim` are a collaborator's; credit them with
+- **Don't invent profile URLs.** Confirmed by the owner: GitHub `SyedaMalihaTabassum19`, the
+  Google Scholar, ORCID and ResearchGate links in `src/data/profile.ts`. Repos under `Reshad-Ul-Karim` are a collaborator's; credit them with
   `hostedBy`, never present them as hers.
 - **Author lists only for published work** (owner's decision). Don't add co-authors to
   under-review or in-progress entries.
@@ -51,7 +51,8 @@ gives directly are the **only** factual sources.
   (`trailingSlash: 'always'`). Site URL/base live only in `site.config.mjs`.
 - **Strictly one page:** everything lives on `src/pages/index.astro`, which stacks the
   components in `src/components/sections/` with anchors `#home #about #skills #research
-  #projects #experience #education #contact` (ids must match `src/data/navigation.ts`). Do
+  #projects #experience #education #recognition #contact` (ids must match
+  `src/data/navigation.ts`; "Awards" points at `#recognition` inside the Education section). Do
   **not** add separate About/research/project pages. Extra detail goes in inline expanders:
   research rows (`#research-<id>`) and project panels (`#project-<id>`). Every former URL
   (`/about/`, `/research/<id>/`, `/projects/<id>/` …) is a `SectionRedirect` stub pointing at

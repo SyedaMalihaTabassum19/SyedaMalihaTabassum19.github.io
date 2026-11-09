@@ -12,6 +12,28 @@
       "Automated rectifier and Li-Ion battery deployment and connectivity monitoring and weekly reporting using Huawei NetEco.",
       "Coordinated SMU upgrades with the Umbrella team and prepared requirements for an AI-assisted site power design tool."
     ],
+    "photos": [
+      {
+        "file": "grameenphone-house.jpg",
+        "alt": "A woman in a blue outfit waving outside Grameenphone's head office, under the company sign."
+      },
+      {
+        "file": "team.jpg",
+        "alt": "Five NEXTERN interns wearing Grameenphone lanyards, posing in front of a patterned wall."
+      },
+      {
+        "file": "presentation.jpg",
+        "alt": "A presenter in a yellow outfit explaining a diagram on a whiteboard; the whiteboard content is blurred."
+      },
+      {
+        "file": "cohort-event.jpg",
+        "alt": "A large group of NEXTERN participants posing together indoors at an event."
+      },
+      {
+        "file": "cohort.jpg",
+        "alt": "The NEXTERN cohort gathered in front of the Grameenphone sign outside the head office."
+      }
+    ],
     "order": 1
   },
   {

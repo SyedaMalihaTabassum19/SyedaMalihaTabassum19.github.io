@@ -19,7 +19,8 @@ const yearMonth = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Use YYYY-MM, e.g.
 
 const link = z.object({
   label: z.string(),
-  url: z.url(),
+  /** A full URL, or a file published with the site: "reports/<name>.pdf" (in public/). */
+  url: z.union([z.url(), z.string().regex(/^reports\/[\w.-]+\.pdf$/, 'Use a full URL or reports/<file>.pdf')]),
   kind: z.enum(['repository', 'website', 'video', 'report', 'paper', 'doi', 'other']),
   /** Set when the link lives on someone else's account, e.g. "Reshad Ul Karim (collaborator)". */
   hostedBy: z.string().optional(),
@@ -96,12 +97,22 @@ const projects = defineCollection({
       tagline: z.string(),
       /** Fuller description, taken from the CV. */
       summary: z.string(),
-      start: yearMonth,
+      /** Dates are optional: shown only when documented. */
+      start: yearMonth.optional(),
       end: yearMonth.optional(),
+      /** Academic term when exact months aren't documented, e.g. "Spring 2024". */
+      period: z.string().optional(),
+      /** Course the project was built for, e.g. "CSE423 · Computer Graphics". */
+      course: z.string().optional(),
       categories: z.array(z.enum(ids(projectCategories))).min(1),
       /** Technologies named in the source material — do not pad this list. */
       technologies: z.array(z.string()).default([]),
       links: z.array(link).default([]),
+      /**
+       * Animated, code-drawn 3D scene for the project card (decorative). Takes
+       * the place of `cover` on the card; real images stay in `media`.
+       */
+      scene: z.enum(['arena', 'wearable', 'robot', 'network', 'terminal', 'clinic', 'match']).optional(),
       /** Real image shown on the project card (photo, screenshot, video frame). */
       cover: z
         .object({
@@ -123,6 +134,16 @@ const projects = defineCollection({
               src: image(),
               alt: z.string().min(1),
               caption: z.string().optional(),
+            }),
+            z.object({
+              /** A video file in public/ (path without the base, e.g. "media/projects/x/demo.mp4"). Never autoplays. */
+              type: z.literal('video'),
+              src: z.string().regex(/^media\/[\w./-]+\.(mp4|webm)$/),
+              poster: image(),
+              title: z.string(),
+              caption: z.string().optional(),
+              /** "portrait" for phone-recorded vertical clips. */
+              orientation: z.enum(['landscape', 'portrait']).default('landscape'),
             }),
             z.object({
               type: z.literal('youtube'),
@@ -156,6 +177,8 @@ const experience = defineCollection({
     start: yearMonth,
     end: yearMonth.optional(),
     highlights: z.array(z.string()).min(1),
+    /** Photos in src/assets/experience/<id>/ (file name + alt text), shown as a gallery. */
+    photos: z.array(z.object({ file: z.string(), alt: z.string().min(1), caption: z.string().optional() })).default([]),
     order: z.number().default(100),
   }),
 });
@@ -170,6 +193,8 @@ const education = defineCollection({
     start: yearMonth,
     end: yearMonth,
     result: z.object({ label: z.string(), value: z.string(), scale: z.string() }).optional(),
+    /** Graduation honours, e.g. "Highest Distinction" (owner-supplied). */
+    honours: z.string().optional(),
     order: z.number().default(100),
   }),
 });
@@ -184,7 +209,21 @@ const awards = defineCollection({
     organiser: z.string(),
     category: z.enum(ids(awardCategories)),
     start: yearMonth.optional(),
-    date: yearMonth,
+    /** "2025-12", or just the year ("2025") when the month isn't documented. */
+    date: z.union([yearMonth, z.string().regex(/^\d{4}$/, 'Use YYYY-MM or YYYY')]),
+    /** Shown as the large highlight card beside the list (laurel badge, photo). */
+    featured: z.boolean().default(false),
+    /** The team the result was achieved with, e.g. "BRACU Mongol Tori". */
+    team: z.string().optional(),
+    /** Her role on this site connected to the award (links to #<experience id>). */
+    role: z
+      .object({
+        experience: reference('experience'),
+        label: z.string(),
+      })
+      .optional(),
+    /** Other public pages about the award (results page, news post …). */
+    links: z.array(link).default([]),
     /**
      * Certificate or proof. A Google Drive share link ("…/file/d/<id>/view")
      * opens in an in-page preview; visitors can open it in Drive to download.
@@ -195,6 +234,15 @@ const awards = defineCollection({
         label: z.string().default('View certificate'),
       })
       .optional(),
+    /** Short text inside the laurel badge, e.g. "Top 6". Without it the badge shows an icon. */
+    badge: z.string().max(7).optional(),
+    /**
+     * Alt text for the card photo. The photo itself is a file named after the
+     * award's id in src/assets/awards/ (e.g. excelerate.jpg).
+     */
+    photoAlt: z.string().optional(),
+    /** Several photos: files in src/assets/awards/ with alt text. Takes precedence over <id>.jpg. */
+    photos: z.array(z.object({ file: z.string(), alt: z.string().min(1) })).default([]),
     order: z.number().default(100),
   }),
 });

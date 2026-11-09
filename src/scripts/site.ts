@@ -99,6 +99,7 @@ function initMenu(): void {
 // ── Scroll state: header, back-to-top, active section ────────────────────
 function initScroll(): void {
   const toTop = document.querySelector<HTMLAnchorElement>('[data-to-top]');
+  const header = document.querySelector<HTMLElement>('[data-header]');
   const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')];
   const sections = links
     .map((l) => document.getElementById(l.dataset.navLink!))
@@ -118,6 +119,8 @@ function initScroll(): void {
   const update = () => {
     const y = window.scrollY;
     root.classList.toggle('is-scrolled', y > 8);
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    header?.style.setProperty('--progress', max > 0 ? Math.min(y / max, 1).toFixed(4) : '0');
     toTop?.classList.toggle('is-shown', y > window.innerHeight * 0.9);
 
     if (sections.length) {
@@ -317,9 +320,115 @@ function initAnimVisibility(): void {
   scenes.forEach((s) => observer.observe(s));
 }
 
+// ── Count-up for the hero stats ──────────────────────────────────────────
+// The real value is in the HTML (and in a visually hidden copy for screen
+// readers); the visible number counts up once, when the stats come into view.
+function initCountUp(): void {
+  if (reducedMotion.matches || !('IntersectionObserver' in window)) return;
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-count-group]')];
+  const run = (group: HTMLElement) => {
+    for (const el of group.querySelectorAll<HTMLElement>('[data-count]')) {
+      const match = /^(\d+)(.*)$/.exec(el.dataset.count ?? '');
+      if (!match) continue;
+      const target = Number(match[1]);
+      const suffix = match[2];
+      const start = performance.now();
+      const duration = 1100 + Math.min(target, 300) * 2;
+      const tick = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = `${Math.round(target * eased)}${t === 1 ? suffix : ''}`;
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  };
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        observer.unobserve(entry.target);
+        // Let the bar's entrance animation start first.
+        window.setTimeout(() => run(entry.target as HTMLElement), 450);
+      }
+    },
+    { threshold: 0.4 },
+  );
+  groups.forEach((g) => {
+    g.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+      if (/^\d/.test(el.dataset.count ?? '')) el.textContent = '0';
+    });
+    observer.observe(g);
+  });
+}
+
+// ── Pointer effects (fine pointers only; off for reduced motion) ─────────
+// [data-parallax] gets --px/--py (−1…1); [data-tilt] gets --tilt-x/--tilt-y
+// on its first child; [data-spotlight] gets --mx/--my in pixels.
+function initPointerFx(): void {
+  if (reducedMotion.matches || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const track = (el: HTMLElement, apply: (x: number, y: number, r: DOMRect) => void, reset: () => void) => {
+    let frame = 0;
+    el.addEventListener('pointermove', (e) => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const r = el.getBoundingClientRect();
+        apply(e.clientX - r.left, e.clientY - r.top, r);
+      });
+    });
+    el.addEventListener('pointerleave', () => {
+      cancelAnimationFrame(frame);
+      reset();
+    });
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) =>
+    track(
+      el,
+      (x, y, r) => {
+        el.style.setProperty('--px', ((x / r.width) * 2 - 1).toFixed(3));
+        el.style.setProperty('--py', ((y / r.height) * 2 - 1).toFixed(3));
+      },
+      () => {
+        el.style.setProperty('--px', '0');
+        el.style.setProperty('--py', '0');
+      },
+    ),
+  );
+
+  document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((el) => {
+    const target = el.firstElementChild as HTMLElement | null;
+    if (!target) return;
+    track(
+      el,
+      (x, y, r) => {
+        target.style.setProperty('--tilt-y', `${((x / r.width - 0.5) * 12).toFixed(2)}deg`);
+        target.style.setProperty('--tilt-x', `${((0.5 - y / r.height) * 10).toFixed(2)}deg`);
+      },
+      () => {
+        target.style.setProperty('--tilt-x', '0deg');
+        target.style.setProperty('--tilt-y', '0deg');
+      },
+    );
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-spotlight]').forEach((el) =>
+    track(
+      el,
+      (x, y) => {
+        el.style.setProperty('--mx', `${Math.round(x)}px`);
+        el.style.setProperty('--my', `${Math.round(y)}px`);
+      },
+      () => {},
+    ),
+  );
+}
+
 initTheme();
 initAnimVisibility();
 initMenu();
 initScroll();
 initReveal();
 initExpanders();
+initCountUp();
+initPointerFx();

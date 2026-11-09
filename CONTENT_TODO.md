@@ -8,7 +8,9 @@ site — missing items are simply left out until supplied.
 ### Accounts and links
 - [x] **GitHub profile** confirmed as `github.com/SyedaMalihaTabassum19` — added to the footer,
       About, Contact and the contact band.
-- [ ] **Google Scholar, ORCID, ResearchGate** URLs, if you have them.
+- [x] **Google Scholar, ORCID, ResearchGate** supplied — shown in the hero, About (Research
+      card), Contact and footer. The ResearchGate link's tracking parameter (`?ev=hdr_xprf`) was
+      removed.
 - [ ] **Long-term email.** The site uses `syeda.maliha.tabassum1@g.bracu.ac.bd`. University
       addresses sometimes expire after graduation — do you want a personal address instead?
 - [ ] **GitHub username and repository name** for deployment (see README → Deploy).
@@ -75,7 +77,8 @@ Written from the CV; please read and adjust anything that doesn't sound like you
 - **Writing section hidden** until the first post exists (README → "Write articles").
 - **References and phone number** removed from the public CV and never shown on the site.
 - **Research grouping:** Published → Under review → In progress. Every entry has its own page.
-  Under-review pages state plainly that the work "has not been accepted".
+  Under-review entries say "Submitted to … and under peer review" (owner asked to drop
+  the "has not been accepted" line, 2026-11-10).
 - **Topic tags** (reliable AI, perception, health, assistive, interaction) were assigned from
   the CV descriptions. Adjust in each `src/content/research/*.md`.
 - **Related links:** the Arduino fall-detection project is cross-linked with the vision-based
@@ -88,8 +91,10 @@ Written from the CV; please read and adjust anything that doesn't sound like you
 ## Added with the v3 redesign (dark / orange single page)
 
 ### Assets the new layout is ready for
-- [x] **Portrait photo** supplied (`Formal picture in suit.jpg`) — cut out with
-      `scripts/make-portrait-cutout.py`; colour in the hero, grayscale on the About arch.
+- [x] **Portrait photo** supplied (`Formal picture in suit.jpg`) — background removed with
+      `scripts/make-portrait-cutout.py --no-enhance` (no filters, at the owner's request). The
+      About photo is a separate colour cut-out; the top bar's avatar is cropped from the hero
+      cut-out (`src/assets/avatar.png`).
 - [x] **WeHeal card image** supplied — a screenshot of the weheal.live home page
       (`src/assets/projects/weheal/homepage.png`).
 - [ ] **Project card images** for the Arduino health monitor, PathGuard and the smoking
@@ -115,7 +120,17 @@ Written from the CV; please read and adjust anything that doesn't sound like you
 - The reference recording (`Recording 2026-10-29 061445.mp4`) stays local and is excluded
   from git.
 
-## Certificates for Recognition
+## Certificates and photos for Recognition
+- [x] **University Rover Challenge 2025** — "Globally ranked 8th of 102 teams" (The Mars Society,
+      with BRACU Mongol Tori) added as the highlight card, at the owner's request (she was on the
+      team). It is not on the current CV. The ranking is the team's result.
+- [ ] **URC 2025 team photo** for the highlight card: save the original as
+      `src/assets/awards/urc-2025.jpg` and add `"photoAlt"` (a screenshot from another website
+      would be too low-resolution).
+- [ ] **URC 2025 month** — only the year is shown. Add e.g. `"date": "2025-06"` if you want the month.
+- [ ] **URC 2025 certificate** (Drive link) and any results page to link.
+- [ ] **Award photos** (optional), e.g. from the competitions. Save as
+      `src/assets/awards/<award id>.jpg` (README → "Recognition").
 - [ ] **Google Drive links** for each award's certificate (Dean's List/VC's List, merit scholarship,
       EXCELERATE, CSE471, RoboSoccer ×2, Hult Prize, Duke of Edinburgh). Each one gets a
       "View certificate" button with an in-page preview once its link is added to
@@ -123,3 +138,55 @@ Written from the CV; please read and adjust anything that doesn't sound like you
       "Anyone with the link → Viewer".
 - [x] **Secondary School Certificate** added (Jan 2017 – May 2019, Shaheed Bir Uttam Lt. Anwar Girls
       College, GPA 5.00/5.00) — supplied by the owner; it is not on the current CV.
+- [x] **Highest Distinction** for the B.Sc. — supplied by the owner (not on the current CV);
+      shown on the degree card and in About. Consider adding it to the CV too.
+- [ ] **Citation count:** the About research card shows paper counts only. A Google Scholar
+      citation number can be added if you want one (it would need updating by hand).
+
+## Added with the new projects (from the owner's pictures and reports)
+
+Six projects were added (PetSeg, Rakkhosh Must Die, Matrimonial Hub, Smart City Healthcare
+Network, ProCV, VoltScope) and the existing ones got photos, team credits and details from the
+reports. Everything comes from the reports, the Matrimonial repository and the owner's own
+description. The original pictures and reports stay in `Pictures/` (git-ignored). At the owner's
+request the reports are published in `public/reports/` and linked from each project, with
+**student IDs blacked out** (names kept). The health monitor keeps its existing Drive report link.
+
+- [ ] **Dates.** Only VoltScope (Spring 2024, from its report) has a date among the new projects.
+      Add `start`/`end` (YYYY-MM) or `period: Fall 2024` to ProCV, Matrimonial Hub, the network
+      design, Rakkhosh Must Die and PetSeg.
+- [ ] **Your role** in PetSeg, the network design, Rakkhosh Must Die, VoltScope and ProCV — only
+      the health monitor's report lists individual contributions.
+- [ ] **Team for Rakkhosh Must Die (Group 09), VoltScope and ProCV** — the reports don't name
+      the members.
+- [ ] **WeHeal course** (folder "470"): CSE470? And was WeHeal the CSE471 1st Runner-Up project?
+- [ ] **Matrimonial Hub course name** (CSE370 — Database Systems?). The site shows only "CSE370".
+
+### Image decisions
+- **WeHeal screenshots:** a phone number and two e-mail addresses (the project contact line and
+  Reshad's personal Gmail) were blurred.
+- [ ] **Smoking prediction and PetSeg images are shown in full (owner's request), but their
+      numbers don't match the reports.** The smoking graphic's charts show accuracies of
+      0.83–0.91 and blood pressure as the top feature; the report has 55–82% accuracy and
+      near-zero correlations. The PetSeg graphic shows a pixel accuracy of 0.985 and a "U-Net++"
+      model; the report has about 0.95 and no U-Net++. Consider correcting the graphics.
+- **Card images:** the health monitor, PathGuard, network design, ProCV, WeHeal and
+  Matrimonial Hub cards show animated 3D scenes (owner's request); their real
+  photos/screenshots are in each project's gallery.
+  VoltScope's card is a landscape crop of its bench photo.
+- [ ] **Rakkhosh Must Die screenshot:** when supplied, add it to `media` (gallery); the card can
+      keep its animated arena or switch to the screenshot with `cover:`.
+- **VoltScope videos** were compressed (9.6 MB → 1.8 MB, 18 MB → 4.9 MB) and muted.
+- `Pictures/mongoltori  v1.jpg` (two spaces; the rover alone in the desert) was not used — the
+  one named `mongoltori v1.jpg` (rover with the flag) was. Swap them if you prefer.
+- `Pictures/Aspire Leaders Certificate for Maliha.png` was not used (not requested). If you'd
+  like it under Recognition, note it shows signatures — link it from Drive rather than
+  publishing the image.
+
+## English proficiency (IELTS)
+
+Supplied by the owner on 2026-11-09: IELTS Academic, taken 3 November 2026; overall band 7.5,
+CEFR C1; Listening 8.5, Reading 8.0, Speaking 7.0, Writing 6.5. Shown as a card in the About
+"at a glance" boxes (module scores behind a button), from `src/data/language-tests.ts`.
+
+- [ ] Optional: a Test Report Form link or verification number, if you want one shown.

@@ -1,6 +1,7 @@
 ---
 // External resource links (repository, demo, report…) with hosting credits.
 import Icon, { type IconName } from './Icon.astro';
+import { withBase } from '@/lib/url';
 
 interface Link {
   label: string;
@@ -16,6 +17,11 @@ interface Props {
 }
 
 const { links, context } = Astro.props;
+// Files published with the site (e.g. reports/x.pdf) get the base path.
+const isLocal = (url: string) => !/^https?:/.test(url);
+const hrefFor = (url: string) => (isLocal(url) ? withBase(url) : url);
+const hostFor = (link: Link) =>
+  link.hostedBy ? `Hosted by ${link.hostedBy}` : isLocal(link.url) ? 'PDF' : new URL(link.url).hostname.replace(/^www\./, '');
 const icons: Record<Link['kind'], IconName> = {
   repository: 'github',
   website: 'globe',
@@ -31,7 +37,7 @@ const icons: Record<Link['kind'], IconName> = {
   {
     links.map((link) => (
       <li>
-        <a href={link.url} target="_blank" rel="noopener noreferrer">
+        <a href={hrefFor(link.url)} target="_blank" rel="noopener noreferrer">
           <span class="icon-wrap">
             <Icon name={icons[link.kind]} size={20} />
           </span>
@@ -42,7 +48,7 @@ const icons: Record<Link['kind'], IconName> = {
                 — {context} (opens in a new tab)
               </span>
             </span>
-            <span class="host">{link.hostedBy ? `Hosted by ${link.hostedBy}` : new URL(link.url).hostname.replace(/^www\./, '')}</span>
+            <span class="host">{hostFor(link)}</span>
           </span>
           <Icon name="arrow-up-right" class="go" />
         </a>

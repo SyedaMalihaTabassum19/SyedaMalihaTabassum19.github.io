@@ -33,6 +33,12 @@
   --status-accepted: light-dark(#1d7a3e, #5fd38d);
   --status-review: var(--accent-text);
   --status-progress: light-dark(#2f5f8a, #8ab8e6);
+  /* Research-topic tones (decoration and small labels; AA on --surface in both themes) */
+  --tone-reliable-ai: light-dark(#a84400, #fd8a3c);
+  --tone-perception: light-dark(#0b6a80, #4fd1e8);
+  --tone-health: light-dark(#b0234a, #ff7f9c);
+  --tone-assistive: light-dark(#6a3fc2, #b49bff);
+  --tone-interaction: light-dark(#1d7a3e, #5fd38d);
 
   --shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 18px 40px -24px rgb(0 0 0 / 0.5);
 
@@ -434,11 +440,95 @@ a:hover {
 }
 
 /* ── Surfaces & labels ──────────────────────────────────────────────────── */
-.card {
+/* Frosted-glass cards: a translucent tint, a light sheen across the top-left,
+   a gradient rim (::before) and a soft "floating" shadow. Ambient colour
+   behind them comes from .glass-scene. Text sits on a tint that stays close to
+   --surface, so contrast is unchanged. */
+.card,
+.glass-card {
+  --glass-tint: light-dark(rgb(255 255 255 / 0.72), rgb(30 30 30 / 0.62));
+  --glass-rim: linear-gradient(
+    145deg,
+    light-dark(rgb(255 255 255 / 1), rgb(255 255 255 / 0.22)) 0%,
+    light-dark(rgb(253 111 0 / 0.28), rgb(253 111 0 / 0.3)) 22%,
+    transparent 48%,
+    transparent 70%,
+    light-dark(rgb(253 111 0 / 0.18), rgb(255 255 255 / 0.1)) 100%
+  );
+  --float-shadow:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.07)),
+    0 1px 2px light-dark(rgb(60 30 10 / 0.06), rgb(0 0 0 / 0.3)),
+    0 22px 44px -26px light-dark(rgb(90 45 10 / 0.3), rgb(0 0 0 / 0.85));
+  --float-shadow-hover:
+    inset 0 1px 0 light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.1)),
+    0 2px 4px light-dark(rgb(60 30 10 / 0.06), rgb(0 0 0 / 0.3)),
+    0 40px 70px -34px light-dark(rgb(90 45 10 / 0.38), rgb(0 0 0 / 0.9)),
+    0 18px 50px -30px rgb(253 111 0 / 0.45);
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  isolation: isolate;
+  border: 1px solid light-dark(rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.06));
   border-radius: var(--radius-l);
+  background:
+    linear-gradient(160deg, light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.045)) 0%, transparent 42%),
+    var(--glass-tint);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+  box-shadow: var(--float-shadow);
+  transition:
+    transform 450ms var(--ease),
+    box-shadow 450ms var(--ease),
+    border-color 250ms ease;
+}
+
+.card::before,
+.glass-card::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--glass-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0.75;
+  transition: opacity 350ms ease;
+  pointer-events: none;
+}
+
+.card:hover,
+.glass-card:hover {
+  box-shadow: var(--float-shadow-hover);
+}
+
+.card:hover::before,
+.glass-card:hover::before {
+  opacity: 1;
+}
+
+/* Ambient light behind a group of glass cards, so the frosting has colour to
+   catch. Purely decorative; it never extends past its container. */
+.glass-scene {
+  position: relative;
+  isolation: isolate;
+}
+
+.glass-scene::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 4% 2%;
+  background:
+    radial-gradient(32% 42% at 18% 30%, light-dark(rgb(253 111 0 / 0.16), rgb(253 111 0 / 0.17)), transparent 70%),
+    radial-gradient(28% 38% at 82% 68%, light-dark(rgb(255 166 77 / 0.2), rgb(229 50 45 / 0.12)), transparent 70%),
+    radial-gradient(24% 30% at 55% 12%, light-dark(rgb(255 210 160 / 0.35), rgb(255 255 255 / 0.05)), transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
 }
 
 .chip {
@@ -614,6 +704,48 @@ a:hover {
   margin-block: var(--s-1) var(--s-2);
 }
 
+/* ── Shared interactive effects ─────────────────────────────────────────── */
+/* Cursor spotlight on cards: --mx/--my are set by the site script on fine
+   pointers. Without the script the glow simply never appears. */
+[data-spotlight] {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+[data-spotlight]::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, light-dark(rgb(253 111 0 / 0.14), rgb(253 111 0 / 0.18)), transparent);
+  opacity: 0;
+  transform: translate(calc(var(--mx, 50%) - 180px), calc(var(--my, 0px) - 180px));
+  transition: opacity 300ms var(--ease);
+  pointer-events: none;
+}
+
+[data-spotlight]:hover::after {
+  opacity: 1;
+}
+
+/* Arrow icons in buttons and links nudge toward where they lead. */
+.btn svg {
+  transition: transform 250ms var(--ease);
+}
+
+.btn:hover svg:last-child:not(:first-child) {
+  transform: translateX(3px);
+}
+
+.btn:hover svg:first-child:not(:last-child) {
+  transform: translateY(-1px) scale(1.08);
+}
+
 /* ── Motion ─────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   /* Hero stagger: CSS only, so content shows even if JS fails. */
@@ -633,14 +765,62 @@ a:hover {
      elements that start below the fold. */
   .reveal-pending {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(28px) scale(0.985);
   }
 
   .reveal-in {
     transition:
-      opacity 420ms var(--ease),
-      transform 420ms var(--ease);
-    transition-delay: calc(var(--reveal-step, 0) * 60ms);
+      opacity 650ms var(--ease),
+      transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(var(--reveal-step, 0) * 90ms);
+  }
+
+  /* Glass cards drift gently, as if floating. `translate` is separate from
+     `transform`, so it combines with the reveal and the hover lift. */
+  .float {
+    animation: card-float 7s ease-in-out infinite;
+    animation-delay: calc(var(--float-i, 0) * -1.7s);
+  }
+
+  @keyframes card-float {
+    50% {
+      translate: 0 -7px;
+    }
+  }
+
+  .card:hover,
+  .glass-card:hover {
+    transform: translateY(-6px);
+  }
+
+  /* Ambient light behind glass cards slowly shifts. */
+  .glass-scene::before {
+    animation: scene-drift 16s ease-in-out infinite alternate;
+  }
+
+  @keyframes scene-drift {
+    to {
+      transform: translate(3%, -4%) scale(1.06);
+    }
+  }
+
+  /* Section headings: the orange rule draws in after the title appears. */
+  .section-heading.reveal-pending .rule {
+    transform: scaleX(0);
+  }
+
+  .section-heading.reveal-in .rule {
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1) 250ms;
+  }
+
+  .section-heading .rule {
+    transform-origin: center;
+  }
+
+  /* Headings breathe a little: the rule gently pulses its width. */
+  .section-heading:hover .rule {
+    transform: scaleX(1.6);
+    transition: transform 400ms var(--ease);
   }
 }
 

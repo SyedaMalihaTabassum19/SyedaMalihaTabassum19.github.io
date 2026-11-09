@@ -63,6 +63,19 @@ test('the public CV has no referee e-mail links or private numbers', () => {
   }
 });
 
+test('published project reports contain no phone numbers or referee contacts', () => {
+  const problems = [];
+  const reports = walk().filter((f) => /^reports\/[^/]+\.pdf$/.test(servedPath(f)));
+  assert.ok(reports.length > 0, 'no published reports found to check');
+  for (const file of reports) {
+    const text = pdfText(file);
+    for (const pattern of FORBIDDEN.slice(0, 5)) {
+      if (pattern.test(text)) problems.push(`${servedPath(file)} matches ${pattern}`);
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
 test('the private original CV is not published', () => {
   const published = walk().map(servedPath);
   assert.ok(!published.some((p) => /Maliha_Updated_Resume/i.test(p)), 'original CV file found in build');

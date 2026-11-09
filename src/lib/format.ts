@@ -3,7 +3,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 /** "2026-09" → "Sep 2026" */
 export function formatMonth(value: string): string {
   const [year, month] = value.split('-').map(Number);
-  return `${MONTHS[(month ?? 1) - 1]} ${year}`;
+  return month ? `${MONTHS[month - 1]} ${year}` : String(year);
 }
 
 /** "Jun 2026 – Sep 2026", "Feb 2025 – May 2025", or a single month. */

@@ -5,12 +5,28 @@ import { Image } from 'astro:assets';
 import Icon, { type IconName } from '@/components/Icon.astro';
 import SectionHeading from '@/components/SectionHeading.astro';
 import SkillVisual from '@/components/SkillVisual.astro';
+import { languageTests } from '@/data/language-tests';
 import { profile } from '@/data/profile';
-import { getEducation, getSkills, resolveEvidence } from '@/lib/content';
+import { getEducation, getExperience, getResearch, getSkills, resolveEvidence } from '@/lib/content';
+import { formatRange } from '@/lib/format';
 import { withBase } from '@/lib/url';
 
 const [degree] = await getEducation();
+const [english] = languageTests;
+const testDate = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const photo = profile.aboutPortrait ?? profile.portrait;
+const research = await getResearch();
+const byStatus = (status: string) => research.filter((r) => r.data.status === status);
+const published = byStatus('published');
+const underReview = byStatus('under-review').length;
+const inProgress = byStatus('in-progress').length;
+const venues = [...new Set(published.map((r) => r.data.venueShort ?? r.data.venue).filter(Boolean))];
+// Most recent research role, for the "Now" card.
+const latestResearch = (await getExperience()).find((e) => e.data.kind === 'research');
+const scholarly = profile.links.filter((l) => ['scholar', 'orcid', 'researchgate'].includes(l.icon));
+// Distinctions shown with the degree (not on the photo).
+const distinctions = [degree?.data.honours, 'Dean’s List', 'Vice Chancellor’s List'].filter(Boolean) as string[];
 const groups = await Promise.all(
   (await getSkills()).map(async (group) => {
     const evidence = (await Promise.all(group.data.items.map((item) => resolveEvidence(item.usedIn)))).flat();
@@ -42,99 +58,219 @@ const icons: Record<string, IconName> = {
     />
 
     <div class="about-grid">
-      <div class:list={['frame', { 'frame--photo': photo }]} data-reveal aria-hidden={photo ? undefined : 'true'}>
-        <div class="arch"></div>
-        {
-          photo ? (
-            <Image
-              class="portrait"
-              src={photo.src}
-              alt={photo.alt}
-              widths={[360, 560, 800, 1100]}
-              sizes="(max-width: 48rem) 70vw, 30vw"
-              quality={90}
-              loading="lazy"
-            />
-          ) : (
-            <div class="mark">
-              <span class="initials">SMT</span>
-              <span class="ring" />
-              <span class="ring ring--2" />
-            </div>
-          )
-        }
+      <div class:list={['frame', { 'frame--photo': photo }]} data-reveal data-tilt aria-hidden={photo ? undefined : 'true'}>
+        <div class="tilt">
+          <div class="arch"></div>
+          <span class="arch-ring" aria-hidden="true"><span></span></span>
+          {
+            photo ? (
+              <Image
+                class="portrait"
+                src={photo.src}
+                alt={photo.alt}
+                widths={[360, 560, 800, 1100]}
+                sizes="(max-width: 48rem) 70vw, 30vw"
+                quality={90}
+                loading="lazy"
+              />
+            ) : (
+              <div class="mark">
+                <span class="initials">SMT</span>
+                <span class="ring" />
+                <span class="ring ring--2" />
+              </div>
+            )
+          }
+        </div>
       </div>
 
       <div class="story" data-reveal style="--reveal-step:1">
+        <p class="eyebrow eyebrow--accent">My story</p>
         <p class="statement">
-          I’m particularly interested in building and evaluating AI systems that support
-          <span class="accent">robust real-world decisions</span> in high-stakes, human-centered environments.
+          I build AI that perceives, reasons and decides in the real world — and that
+          <span class="accent">knows when to hold back</span>.
         </p>
         <p>
-          My work focuses on human-centered sensing, assistive intelligence, edge–cloud AI systems and automation, with a
-          growing interest in AI evaluation, calibration and sequential decision-making under uncertainty.
+          Most of my work sits where models meet messy reality: estimating metric 3D geometry from a single camera,
+          calibrated and interpretable models for health, and assistive agents that run across the edge and the cloud.
         </p>
         <p>
-          I completed a B.Sc. in Computer Science and Engineering at BRAC University (September 2022 – September 2026)
-          with a CGPA of {degree?.data.result?.value ?? '3.93'} out of {degree?.data.result?.scale ?? '4.00'}, on a
-          merit-based academic scholarship and on the Dean’s List and Vice Chancellor’s List.
+          I like building the hardware too — an obstacle avoider made from discrete logic instead of a microcontroller, a
+          dual-ESP32 mobile manipulator that finds its way with ArUco markers, and the vision, networking and mechanical
+          subsystems of BRAC University’s Mars rover team, Mongoltori.
         </p>
-
-        <button
-          class="more-toggle"
-          type="button"
-          aria-expanded="true"
-          aria-controls="about-more"
-          data-expander-toggle
-          hidden
-        >
-          <span class="toggle-icon" aria-hidden="true"><Icon name="plus" /></span>
-          <span data-label-open="Show less" data-label-closed="Read the longer story">Show less</span>
-        </button>
-        <div class="expander" id="about-more" data-expander>
-          <div class="expander-inner">
-            <div class="more">
-              <p>
-                On the research side, I co-authored a peer-reviewed IEEE JCSSE 2026 paper on a vision-based hand gesture
-                keyboard–mouse framework with bilingual next-word prediction. Manuscripts now under review examine when
-                available camera motions can — and cannot — identify a scene’s 3D physical geometry, camera-agnostic
-                monocular metric 3D detection, calibrated and interpretable autism classification from functional
-                connectomes, and the evidence base for vision-based fall detection.
-              </p>
-              <p>
-                Alongside the research, I build physical systems: a microcontroller-free obstacle avoider made from
-                discrete logic, a dual-ESP32 mobile manipulator that localises itself from ArUco markers, a wearable health
-                monitor with GSM/GPS alerts, and the vision, networking and mechanical subsystems of BRAC University’s Mars
-                rover team, Mongoltori.
-              </p>
-              <p>
-                I’ve also worked in industry and in the classroom. As a NEXTERN in Grameenphone’s Technology
-                Infrastructure Management team, I automated deployment and connectivity monitoring and weekly reporting
-                for rectifiers and Li-Ion batteries using Huawei NetEco. As an undergraduate teaching assistant for Data
-                Structures, I mentored more than 250 students through laboratory sessions and one-to-one guidance.
-              </p>
-              <p>
-                The common thread is reliability: systems whose confidence means something, and that can recognise when
-                they should not decide at all.
-              </p>
-            </div>
-          </div>
+        <p>
+          Along the way I’ve mentored more than 250 students as a Data Structures teaching assistant and automated power
+          infrastructure monitoring at Grameenphone as a NEXTERN.
+        </p>
+        <blockquote class="thread">
+          <p>
+            What connects it all: AI whose confidence means something — and that can recognise when it should not
+            decide at all.
+          </p>
+        </blockquote>
+        <div class="story-actions">
+          <a class="btn btn--primary" href={withBase('#research')}>
+            Explore my research <Icon name="arrow-right" />
+          </a>
+          <a class="btn" href={withBase('#contact')}>
+            Let’s talk <Icon name="arrow-up-right" />
+          </a>
         </div>
+      </div>
+    </div>
 
-        <ul class="facts">
-          <li><Icon name="pin" /> {profile.location}</li>
-          <li><Icon name="cap" /> {degree?.data.institution}</li>
-          {profile.availability && <li class="accent"><Icon name="rocket" /> {profile.availability.label}</li>}
-        </ul>
-
+    <!-- At a glance: now, research, education, CV -->
+    <div class="glance glass-scene">
+      <article class="g-card glass-card g-now" data-reveal data-spotlight>
+        <p class="g-label"><Icon name="rocket" /> Now</p>
+        {profile.availability && <h3 class="g-title">{profile.availability.label}</h3>}
         {
-          profile.cv && (
-            <a class="btn btn--primary" href={withBase(profile.cv.path)} download>
-              <Icon name="download" /> Download CV
-            </a>
+          latestResearch && (
+            <>
+              <p class="g-sub">
+                Most recently: Undergraduate Research Assistant, {latestResearch.data.organisation}
+                {latestResearch.data.unit && <> ({latestResearch.data.unit})</>}
+                {' · '}
+                <span class="mono g-meta">{formatRange(latestResearch.data.start, latestResearch.data.end)}</span>
+              </p>
+              <p class="g-note">DRISTEE, an assistive technology research project.</p>
+              <a class="g-link" href={withBase(`#${latestResearch.id}`)}>
+                About DRISTEE <span class="g-arrow"><Icon name="arrow-right" /></span>
+              </a>
+            </>
           )
         }
-      </div>
+      </article>
+
+      <!-- Three summary cards, one shared layout: label · number · two lines · footer -->
+      <article class="g-card g-stat glass-card float" data-reveal data-spotlight style="--reveal-step:1" data-count-group>
+        <p class="g-label"><Icon name="flask" /> Research</p>
+        <p class="g-big">
+          <span class="visually-hidden">{published.length}</span>
+          <span class="g-num" aria-hidden="true" data-count={String(published.length)}>{published.length}</span>
+          <span class="g-unit">peer-reviewed {published.length === 1 ? 'paper' : 'papers'}</span>
+        </p>
+        <div class="g-text">
+          {venues.length > 0 && <h3 class="g-head">Published at {venues.join(', ')}</h3>}
+          <p class="g-line">{underReview} under review · {inProgress} in progress</p>
+        </div>
+        {
+          scholarly.length > 0 && (
+            <ul class="g-foot g-links">
+              {scholarly.map((l) => (
+                <li>
+                  <a class="g-link" href={l.url} target="_blank" rel="noopener noreferrer me">
+                    {l.label}
+                    <span class="g-arrow">
+                      <Icon name="arrow-up-right" />
+                    </span>
+                    <span class="visually-hidden">(opens in a new tab)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </article>
+
+      <article class="g-card g-stat glass-card float" data-reveal data-spotlight style="--reveal-step:2">
+        <p class="g-label"><Icon name="cap" /> Education</p>
+        {
+          degree?.data.result && (
+            <p class="g-big">
+              <span class="g-num">{degree.data.result.value}</span>
+              <span class="g-unit">
+                {degree.data.result.label} / {degree.data.result.scale}
+              </span>
+            </p>
+          )
+        }
+        <div class="g-text">
+          <h3 class="g-head">{degree?.data.qualification}</h3>
+          <p class="g-line">{degree?.data.institution}</p>
+        </div>
+        <ul class="g-foot g-chips" aria-label="Distinctions">
+          {distinctions.map((d) => <li>{d}</li>)}
+        </ul>
+      </article>
+
+      {
+        english && (
+          <article class="g-card g-stat glass-card float g-lang" data-reveal data-spotlight style="--reveal-step:3">
+            <p class="g-label">
+              <Icon name="globe" /> English
+            </p>
+            <p class="g-big">
+              <span class="g-num">{english.overall}</span>
+              <span class="g-unit">overall band / {english.max}</span>
+            </p>
+            <div class="g-text">
+              <h3 class="g-head">
+                {english.name}
+                {english.module && ` ${english.module}`}
+              </h3>
+              {english.date && (
+                <p class="g-line">
+                  Taken <time datetime={english.date}>{testDate(english.date)}</time>
+                </p>
+              )}
+            </div>
+            <div class="g-foot">
+              {english.cefr && (
+                <ul class="g-chips" aria-label="CEFR level">
+                  <li>CEFR {english.cefr}</li>
+                </ul>
+              )}
+              <button class="g-more" type="button" aria-expanded="true" aria-controls="ielts-modules" data-expander-toggle hidden>
+                <span data-label-open="Hide module scores" data-label-closed="Module scores">
+                  Hide module scores
+                </span>
+                <span class="g-more-icon" aria-hidden="true">
+                  <Icon name="plus" />
+                </span>
+              </button>
+            </div>
+            <div class="expander" id="ielts-modules" data-expander role="region" aria-label={`${english.name} module scores`}>
+              <div class="expander-inner">
+                <dl class="bands">
+                  {english.parts.map((b) => (
+                    <div class="band">
+                      <dt>{b.label}</dt>
+                      <dd>
+                        <span class="band-bar" aria-hidden="true">
+                          <i style={`--v:${b.score / english.max}`} />
+                        </span>
+                        <span class="band-score">{b.score.toFixed(1)}</span>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          </article>
+        )
+      }
+
+      {
+        profile.cv && (
+          <div class="g-card glass-card g-cv" data-reveal data-spotlight>
+            <p class="g-label">
+              <Icon name="document" /> CV
+            </p>
+            <p class="g-cv-text">Research, projects, experience and awards in one PDF.</p>
+            <div class="g-cv-actions">
+              <a class="btn g-btn-glass" href={withBase(profile.cv.path)} target="_blank" rel="noopener noreferrer">
+                <Icon name="eye" /> View CV (PDF)
+                <span class="visually-hidden">(opens in a new tab)</span>
+              </a>
+              <a class="btn btn--primary" href={withBase(profile.cv.path)} download>
+                <Icon name="download" /> Download
+              </a>
+            </div>
+          </div>
+        )
+      }
     </div>
 
     <!-- Skills -->
@@ -143,10 +279,10 @@ const icons: Record<string, IconName> = {
         <h3>Expertise</h3>
         <p>Grouped by area, with links to where each was applied on this page. No self-rated percentages.</p>
       </div>
-      <ul class="skill-grid">
+      <ul class="skill-grid glass-scene">
         {
           groups.map((group, i) => (
-            <li class:list={['skill', { 'skill--featured': i === 0 }]} data-reveal style={`--reveal-step:${i % 3}`}>
+            <li class="skill glass-card float" data-reveal data-spotlight style={`--reveal-step:${i % 3};--float-i:${i}`}>
               <div class="skill-top">
                 <span class="skill-pill">
                   {String(i + 1).padStart(2, '0')} · {group.items.length} skills
@@ -188,6 +324,11 @@ const icons: Record<string, IconName> = {
 </section>
 
 <style>
+  /* The decorative ring may extend past the photo; never past the page. */
+  #about {
+    overflow-x: clip;
+  }
+
   .about-grid {
     display: grid;
     grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -291,52 +432,337 @@ const icons: Record<string, IconName> = {
   }
 
   .statement {
-    font-size: var(--step-2);
+    font-size: var(--step-3);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+
+  .story .eyebrow {
+    margin-bottom: calc(var(--s-1) * -1);
+  }
+
+  /* Pull-quote: the thread through the work. */
+  .thread {
+    margin: var(--s-1) 0 0;
+    padding: 0.1rem 0 0.1rem var(--s-2);
+    border-left: 2px solid var(--border-strong);
+  }
+
+  .thread p {
+    font-size: var(--step-0);
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--text-2);
+  }
+
+  .story-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+    margin-top: var(--s-1);
+  }
+
+  /* ── At a glance ── */
+  .glance {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-2);
+    margin-top: clamp(3rem, 2rem + 3vw, 4.5rem);
+  }
+
+  /* Glass finish, rim and floating shadow come from .glass-card (global.css). */
+  .g-card {
+    display: grid;
+    align-content: start;
+    gap: 0.55rem;
+    padding: var(--s-3);
+    border-radius: 22px;
+  }
+
+  .g-now {
+    grid-column: 1 / -1;
+    background:
+      radial-gradient(120% 140% at 0% 0%, light-dark(rgb(253 111 0 / 0.14), rgb(253 111 0 / 0.16)), transparent 55%),
+      linear-gradient(160deg, light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.045)) 0%, transparent 42%),
+      var(--glass-tint);
+  }
+
+  .g-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  .g-label :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .g-meta {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .g-title {
+    font-size: var(--step-1);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .g-sub {
+    color: var(--text-2);
+  }
+
+  .g-note {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .g-big {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.55rem;
+    margin-top: 0.35rem;
+  }
+
+  .g-num {
+    font-size: var(--step-4);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+
+  .g-unit {
+    font-family: var(--font-mono-stack);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  .g-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.1rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .g-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.75rem;
+    font-size: var(--step--1);
+    font-weight: 700;
+    color: var(--accent-text);
+    text-decoration: none;
+  }
+
+  .g-arrow {
+    display: inline-grid;
+    place-items: center;
+    transition: transform 250ms var(--ease);
+  }
+
+  .g-arrow :global(svg) {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .g-link:hover .g-arrow {
+    transform: translate(2px, -2px);
+  }
+
+  .g-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .g-chips li {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-size: var(--step--2);
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--text-2);
+  }
+
+  .g-chips li:first-child {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    color: var(--accent-text);
+  }
+
+  .g-cv {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2);
+    padding-block: var(--s-2);
+  }
+
+  .g-cv-text {
+    flex: 1 1 14rem;
+    color: var(--text-2);
+  }
+
+  .g-cv-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+  }
+
+  .g-btn-glass {
+    background: light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.05));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Summary cards: label · number · heading + line · footer pinned to the bottom */
+  .g-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .g-text {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .g-head {
+    font-size: var(--step-0);
     font-weight: 700;
     line-height: 1.35;
     color: var(--text);
   }
 
-  .more-toggle {
+  .g-line {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .g-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem var(--s-1);
+    margin-top: auto;
+    padding-top: 0.6rem;
+  }
+
+  ul.g-foot {
+    justify-content: flex-start;
+    margin-bottom: 0;
+  }
+
+  .g-more {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.35rem;
     min-height: 2.75rem;
     padding: 0;
     border: 0;
     background: none;
     color: var(--accent-text);
-    font-weight: 700;
-  }
-
-  .expander {
-    width: 100%;
-  }
-
-  .more {
-    display: grid;
-    gap: var(--s-2);
-    padding-bottom: var(--s-1);
-  }
-
-  .facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-1) var(--s-3);
-    padding: 0;
-    list-style: none;
     font-size: var(--step--1);
     font-weight: 700;
+    white-space: nowrap;
   }
 
-  .facts li {
-    display: inline-flex;
+  .g-more:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .g-more-icon :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 250ms var(--ease);
+  }
+
+  .g-more[aria-expanded='true'] .g-more-icon :global(svg) {
+    transform: rotate(45deg);
+  }
+
+  .bands {
+    display: grid;
+    gap: 0.6rem;
+    padding-top: var(--s-2);
+  }
+
+  .band {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr) 2rem;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.75rem;
   }
 
-  .facts :global(svg) {
-    color: var(--accent);
+  .band dt {
+    font-size: var(--step--1);
+    color: var(--text-2);
+  }
+
+  .band dd {
+    display: contents;
+  }
+
+  .band-bar {
+    position: relative;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--border);
+  }
+
+  .band-bar i {
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    background: var(--accent-gradient);
+    transform: scaleX(var(--v));
+    transform-origin: left;
+  }
+
+  .band-score {
+    font-family: var(--font-mono-stack);
+    font-weight: 700;
+    text-align: right;
+    color: var(--text);
+  }
+
+  @media (min-width: 64rem) {
+    .glance {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 40.01rem) and (max-width: 63.99rem) {
+    .g-lang {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .glance {
+      grid-template-columns: 1fr;
+    }
   }
 
   /* Skills */
@@ -363,7 +789,7 @@ const icons: Record<string, IconName> = {
 
   /* Expertise cards — adapted from the owner's "services" reference: a pill,
      a round icon, title, description, then a visual at the bottom. The
-     first card is highlighted. Vertical grid, no horizontal scrolling. */
+     all cards share one quiet style so the titles lead. Vertical grid, no horizontal scrolling. */
   .skill-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -372,44 +798,24 @@ const icons: Record<string, IconName> = {
     list-style: none;
   }
 
+  /* Glass finish, rim and floating shadow come from .glass-card (global.css). */
   .skill {
-    --card-bg: var(--surface);
+    --card-bg: linear-gradient(160deg, light-dark(rgb(255 255 255 / 0.6), rgb(255 255 255 / 0.045)) 0%, transparent 42%),
+      var(--glass-tint);
     --card-text: var(--text);
     --card-muted: var(--text-2);
-    --card-line: var(--border);
-    --tag-bg: var(--surface-2);
+    --card-line: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.08));
+    --tag-bg: light-dark(rgb(0 0 0 / 0.04), rgb(255 255 255 / 0.05));
     --link: var(--text);
     display: flex;
     flex-direction: column;
     gap: var(--s-2);
     padding: var(--s-3);
-    border: 1px solid var(--card-line);
-    border-radius: 20px;
+    border-radius: 22px;
     background: var(--card-bg);
     color: var(--card-text);
-    box-shadow: 0 1px 0 rgb(0 0 0 / 0.03), 0 24px 50px -36px rgb(0 0 0 / 0.55);
-    transition:
-      transform 300ms var(--ease),
-      border-color var(--fast),
-      box-shadow 300ms var(--ease);
   }
 
-  .skill:hover {
-    transform: translateY(-4px);
-    border-color: color-mix(in srgb, var(--accent) 50%, var(--card-line));
-    box-shadow: 0 30px 60px -34px rgb(0 0 0 / 0.6);
-  }
-
-  /* Highlighted first card (the reference's filled card), in the site's orange. */
-  .skill--featured {
-    --card-bg: linear-gradient(160deg, #ff8a2a 0%, #fd6f00 45%, #d65a00 100%);
-    --card-text: #111111;
-    --card-muted: rgb(17 17 17 / 0.82);
-    --card-line: rgb(255 255 255 / 0.25);
-    --tag-bg: rgb(255 255 255 / 0.22);
-    --link: #111111;
-    border-color: transparent;
-  }
 
   .skill-top {
     display: flex;
@@ -419,28 +825,22 @@ const icons: Record<string, IconName> = {
   }
 
   .skill-pill {
-    padding: 0.3rem 0.8rem;
-    border: 1px solid color-mix(in srgb, var(--card-text) 30%, transparent);
-    border-radius: 999px;
     font-family: var(--font-mono-stack);
     font-size: var(--step--2);
-    color: var(--card-muted);
+    letter-spacing: 0.06em;
+    color: var(--muted);
   }
 
   .skill-icon {
     display: grid;
     place-items: center;
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 2.4rem;
+    height: 2.4rem;
     border-radius: 50%;
-    background: var(--tag-bg);
+    border: 1px solid var(--border);
     color: var(--accent-text);
   }
 
-  .skill--featured .skill-icon {
-    background: #fff;
-    color: #111;
-  }
 
   .skill-icon :global(svg) {
     width: 1.2rem;
@@ -472,8 +872,8 @@ const icons: Record<string, IconName> = {
     border-radius: 999px;
     background: var(--tag-bg);
     font-size: var(--step--2);
-    font-weight: 700;
-    color: var(--card-text);
+    font-weight: 500;
+    color: var(--card-muted);
   }
 
   .applied {
@@ -503,14 +903,16 @@ const icons: Record<string, IconName> = {
     display: inline-flex;
     align-items: center;
     min-height: 2rem;
-    font-weight: 700;
     font-size: var(--step--1);
-    color: var(--link);
-    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+    color: var(--card-muted);
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong);
+    text-underline-offset: 0.25em;
   }
 
-  .skill:not(.skill--featured) .applied-group a:hover {
+  .applied-group a:hover {
     color: var(--accent-text);
+    text-decoration-color: currentColor;
   }
 
   .skill :global(.viz) {
@@ -520,6 +922,72 @@ const icons: Record<string, IconName> = {
   .applied + :global(.viz),
   .skill-tags + :global(.viz) {
     margin-top: auto;
+  }
+
+  /* ── Photo: 3D tilt wrapper and rotating ring ── */
+  .tilt {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: end center;
+    transform: perspective(1100px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .tilt > .portrait {
+    grid-area: 1 / 1;
+  }
+
+  .arch-ring {
+    position: absolute;
+    left: 50%;
+    top: 14%;
+    width: 104%;
+    aspect-ratio: 1;
+    translate: -50% 0;
+    border-radius: 50%;
+    border: 1.5px dashed light-dark(rgb(253 111 0 / 0.4), rgb(253 111 0 / 0.32));
+    pointer-events: none;
+  }
+
+  .arch-ring > span {
+    position: absolute;
+    top: 50%;
+    left: -6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 14px 3px rgb(253 111 0 / 0.5);
+  }
+
+  .frame:not(.frame--photo) .arch-ring {
+    display: none;
+  }
+
+  /* ── Statement highlight: soft marker underline (wraps cleanly across lines) ── */
+  .statement .accent {
+    color: var(--accent-text);
+  }
+
+  /* Expertise cards: the cursor spotlight comes from [data-spotlight] in global.css. */
+
+  .skill-icon {
+    transition: transform 400ms var(--ease);
+  }
+
+  .skill:hover .skill-icon {
+    transform: rotate(-12deg) scale(1.08);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .arch-ring {
+      animation: arch-spin 30s linear infinite;
+    }
+
+    @keyframes arch-spin {
+      to { transform: rotate(1turn); }
+    }
   }
 
   @media (max-width: 63.99rem) {

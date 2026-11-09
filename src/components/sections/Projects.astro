@@ -6,6 +6,14 @@
 import { Image } from 'astro:assets';
 import { getEntries, render } from 'astro:content';
 import FilterControls from '@/components/FilterControls.astro';
+import GameCover from '@/components/GameCover.astro';
+import ClinicCover from '@/components/covers/ClinicCover.astro';
+import MatchCover from '@/components/covers/MatchCover.astro';
+import NetworkCover from '@/components/covers/NetworkCover.astro';
+import RobotCover from '@/components/covers/RobotCover.astro';
+import TerminalCover from '@/components/covers/TerminalCover.astro';
+import WearableCover from '@/components/covers/WearableCover.astro';
+import VideoClip from '@/components/VideoClip.astro';
 import Gallery from '@/components/Gallery.astro';
 import Icon from '@/components/Icon.astro';
 import LinkList from '@/components/LinkList.astro';
@@ -19,6 +27,15 @@ import { formatRange } from '@/lib/format';
 import { withBase } from '@/lib/url';
 
 const projects = await getProjects();
+const scenes = {
+  arena: GameCover,
+  wearable: WearableCover,
+  robot: RobotCover,
+  network: NetworkCover,
+  terminal: TerminalCover,
+  clinic: ClinicCover,
+  match: MatchCover,
+};
 const skills = await getSkills();
 const categories = projectCategories
   .map((c) => ({ id: c.id, label: c.label, count: projects.filter((p) => p.data.categories.includes(c.id)).length }))
@@ -55,13 +72,16 @@ const items = await Promise.all(
         {projects.length} projects
       </p>
 
-      <div class="grid" data-expander-group>
+      <div class="grid glass-scene" data-expander-group>
         {
           items.map(({ p, i, Content, hasBody, related, skills: used, featured }) => {
             const anchor = `project-${p.id}`;
             const panelId = `${anchor}-details`;
             const videos = p.data.media.filter((m) => m.type === 'youtube');
+            const clips = p.data.media.filter((m) => m.type === 'video');
             const images = p.data.media.filter((m) => m.type === 'image');
+            const Scene = p.data.scene ? scenes[p.data.scene] : p.data.cover ? undefined : p.data.categories[0] === 'graphics' ? GameCover : undefined;
+            const when = p.data.period ?? (p.data.start ? formatRange(p.data.start, p.data.end) : '');
             const cats = p.data.categories.map((c) => labelFor(projectCategories, c));
             return (
               <>
@@ -72,11 +92,14 @@ const items = await Promise.all(
                   data-category={p.data.categories.join(' ')}
                   data-search={`${p.data.title} ${p.data.summary}`.toLowerCase()}
                   data-reveal
+                  data-spotlight
                   data-panel={panelId}
                   aria-labelledby={`${anchor}-title`}
                 >
                   <div class="media">
-                    {p.data.cover ? (
+                    {Scene ? (
+                      <Scene />
+                    ) : p.data.cover ? (
                       <Image
                         src={p.data.cover.src}
                         alt={p.data.cover.alt}
@@ -87,7 +110,7 @@ const items = await Promise.all(
                     ) : (
                       <ProjectCover id={p.id} category={p.data.categories[0]} index={i + 1} />
                     )}
-                    {videos.length > 0 && (
+                    {videos.length + clips.length > 0 && (
                       <span class="media-badge">
                         <Icon name="play" /> Video demo
                       </span>
@@ -106,7 +129,13 @@ const items = await Promise.all(
                     </ul>
                     <div class="bar">
                       <span class="cats">
-                        {cats.join(' · ')} · <span class="mono">{formatRange(p.data.start, p.data.end)}</span>
+                        {cats.join(' · ')}
+                        {when && (
+                          <>
+                            {' '}
+                            · <span class="mono">{when}</span>
+                          </>
+                        )}
                       </span>
                       <button
                         class="btn btn--small explore"
@@ -143,7 +172,9 @@ const items = await Promise.all(
                         <div>
                           <p class="eyebrow eyebrow--accent">{cats.join(' · ')}</p>
                           <h4>{p.data.title}</h4>
-                          <p class="mono muted">{formatRange(p.data.start, p.data.end)}</p>
+                          {(p.data.course || when) && (
+                            <p class="mono muted">{[p.data.course, when].filter(Boolean).join(' · ')}</p>
+                          )}
                         </div>
                         <button class="btn btn--small close" type="button" data-expander-close={panelId} hidden>
                           <Icon name="close" /> Close
@@ -210,6 +241,16 @@ const items = await Promise.all(
                               <YouTubeEmbed videoId={v.videoId} title={v.title} caption={v.caption} hostedBy={v.hostedBy} />
                             </div>
                           ))}
+                          {clips.length > 0 && (
+                            <div>
+                              <h5>{clips.length > 1 ? 'Videos' : 'Video'}</h5>
+                              <div class="clips">
+                                {clips.map((c) => (
+                                  <VideoClip {...c} />
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           {images.length > 0 && (
                             <div>
                               <h5>Gallery</h5>
@@ -250,6 +291,13 @@ const items = await Promise.all(
     text-align: center;
   }
 
+  .clips {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--s-2);
+    align-items: start;
+  }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -257,14 +305,13 @@ const items = await Promise.all(
     gap: var(--s-3);
   }
 
+  /* Glass finish and hover lift come from .card (global.css). */
   .project {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    border-radius: 20px;
     scroll-margin-top: calc(var(--header-h) + 1rem);
-    transition:
-      border-color var(--fast),
-      box-shadow var(--fast);
   }
 
   .project:hover,

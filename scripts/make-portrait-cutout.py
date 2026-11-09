@@ -3,7 +3,7 @@
     python scripts/make-portrait-cutout.py <photo.jpg> <output.png> [--max-width 1600] [--fade 0.16] [--sharpen 0.45]
 
 Used for:
-    hero   "Formal picture in suit.jpg" → src/assets/portrait-cutout.png  --max-width 1600 --fade 0.16 --sharpen 0.2
+    hero   "Formal picture in suit.jpg" → src/assets/portrait-cutout.png  --max-width 1600 --fade 0.16 --no-enhance
     about  "890187627_…_n.jpg"          → src/assets/about-portrait.png    --max-width 1100 --fade 0.08
 
 Steps:
@@ -13,8 +13,9 @@ Steps:
   2. Edge colour clean-up: removes the old background's tint from
      semi-transparent hair pixels (pymatting foreground estimation), so no
      white/green halo shows on dark or orange pages.
-  3. Gentle enhancement: mild local contrast (CLAHE on lightness) and an
-     unsharp mask. No upscaling unless the photo is narrower than --max-width.
+  3. Optional gentle enhancement: mild local contrast (CLAHE on lightness) and
+     an unsharp mask. --no-enhance skips it (and never upscales), leaving the
+     photo's own colours and detail untouched.
   4. Crop to the person, fade the bottom edge (where the photo is cut off), and
      save a high-quality PNG. Astro converts it to WebP at build time.
 
@@ -91,6 +92,7 @@ def main() -> None:
     p.add_argument("--max-width", type=int, default=1600)
     p.add_argument("--sharpen", type=float, default=0.45, help="unsharp-mask amount (lower for already-enhanced photos)")
     p.add_argument("--fade", type=float, default=0.16, help="bottom fraction to fade out (0 = none)")
+    p.add_argument("--no-enhance", action="store_true", help="no contrast/sharpening and no upscaling: background removal only")
     args = p.parse_args()
 
     bgr = cv2.imread(args.src, cv2.IMREAD_COLOR)
@@ -101,7 +103,8 @@ def main() -> None:
 
     alpha = clean_alpha(matte(args.src))
     rgb = foreground_colours(rgb, alpha)
-    rgb = enhance(rgb, args.sharpen)
+    if not args.no_enhance:
+        rgb = enhance(rgb, args.sharpen)
 
     # Crop to the person (small margin), then fade the bottom edge.
     ys, xs = np.where(alpha > 0.02)
@@ -119,9 +122,11 @@ def main() -> None:
     # Resize (high-quality) to the target width.
     w = rgb.shape[1]
     scale = args.max_width / w
+    if args.no_enhance:
+        scale = min(scale, 1.0)
     interp = cv2.INTER_AREA if scale < 1 else cv2.INTER_LANCZOS4
     if abs(scale - 1) > 0.01:
-        size = (args.max_width, round(rgb.shape[0] * scale))
+        size = (round(w * scale), round(rgb.shape[0] * scale))
         rgb = cv2.resize(rgb, size, interpolation=interp)
         alpha = cv2.resize(alpha, size, interpolation=interp)
 

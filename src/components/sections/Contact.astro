@@ -10,6 +10,11 @@ import { withBase } from '@/lib/url';
 <section class="section contact" id="contact" aria-labelledby="contact-title">
   <div class="wrap">
     <div class="frame" data-reveal>
+      <span class="decor" aria-hidden="true">
+        <span class="c-ring"></span>
+        <span class="c-ring c-ring--2"></span>
+        <span class="c-orb"></span>
+      </span>
       <p class="eyebrow eyebrow--accent">Contact</p>
       <h2 id="contact-title">Let’s talk <span class="accent-grad">research</span>.</h2>
       <p class="lead">
@@ -152,5 +157,94 @@ import { withBase } from '@/lib/url';
     gap: var(--s-1);
     padding: 0;
     list-style: none;
+  }
+
+  /* ── Decorative motion behind the invitation ── */
+  .decor {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .frame {
+    isolation: isolate;
+  }
+
+  .c-ring {
+    position: absolute;
+    top: -40%;
+    left: 50%;
+    width: 46rem;
+    aspect-ratio: 1;
+    margin-left: -23rem;
+    border-radius: 50%;
+    border: 1.5px dashed light-dark(rgb(253 111 0 / 0.25), rgb(253 111 0 / 0.22));
+  }
+
+  .c-ring--2 {
+    top: -25%;
+    width: 30rem;
+    margin-left: -15rem;
+    border-style: solid;
+    border-color: light-dark(rgb(26 26 26 / 0.07), rgb(255 255 255 / 0.06));
+  }
+
+  .c-ring::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 16px 3px rgb(253 111 0 / 0.5);
+  }
+
+  .c-ring--2::after {
+    display: none;
+  }
+
+  .c-orb {
+    position: absolute;
+    right: 9%;
+    bottom: 14%;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffb070, var(--accent) 60%, #b84a00);
+    box-shadow: 0 0 30px 6px rgb(253 111 0 / 0.4);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .c-ring {
+      animation: c-spin 40s linear infinite;
+    }
+
+    .c-ring--2 {
+      animation-duration: 26s;
+      animation-direction: reverse;
+    }
+
+    @keyframes c-spin {
+      to {
+        transform: rotate(1turn);
+      }
+    }
+
+    .c-orb {
+      animation: c-float 7s ease-in-out infinite;
+    }
+
+    @keyframes c-float {
+      50% {
+        transform: translate(-14px, -18px);
+      }
+    }
+
+    .email:hover {
+      transform: translateY(-2px);
+    }
   }
 </style>

@@ -73,6 +73,9 @@ export const projectCategories = [
   { id: 'machine-learning', label: 'Machine learning' },
   { id: 'health-tech', label: 'Health tech' },
   { id: 'web', label: 'Full-stack web' },
+  { id: 'electronics', label: 'Circuits & electronics' },
+  { id: 'systems', label: 'Systems & networking' },
+  { id: 'graphics', label: 'Graphics & games' },
 ] as const;
 
 export const experienceKinds = [

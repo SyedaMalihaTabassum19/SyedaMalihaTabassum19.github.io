@@ -1,6 +1,6 @@
 // Publication-status integrity on the single page: every research entry is
 // rendered under its exact status, unpublished work never shows a DOI or
-// citation controls, and under-review work says plainly it is not accepted.
+// citation controls, and under-review work says it is under peer review.
 // (The content schema blocks most mistakes; this guards the rendered page.)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -45,7 +45,7 @@ for (const { id, status, submittedTo } of entries) {
       assert.ok(!/Copy citation|BibTeX/.test(row), 'unpublished work must not offer citations');
     }
     if (status === 'under-review') {
-      assert.ok(/has not been\s+accepted/.test(row), 'under-review entries must say the work is not accepted');
+      assert.ok(/under peer review/.test(row), 'under-review entries say the work is under peer review');
       assert.ok(row.includes(submittedTo), 'under-review entries name the submission venue');
     }
     if (status === 'published') {

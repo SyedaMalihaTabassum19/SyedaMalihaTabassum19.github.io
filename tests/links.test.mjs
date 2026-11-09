@@ -143,9 +143,11 @@ test('every built page has a title, description and exactly one h1', () => {
 });
 
 test('only intended files are published (no source PDFs, notes or source maps)', () => {
+  // PDFs allowed: the redacted CV and project reports (student IDs removed) in reports/.
+  const allowedPdf = (p) => p === 'cv/Syeda-Maliha-Tabassum-CV.pdf' || /^reports\/[\w.-]+\.pdf$/.test(p);
   const unexpected = walk()
     .map(servedPath)
-    .filter((p) => /\.(md|map|tex|docx?|py|ts)$/i.test(p) || (p.endsWith('.pdf') && p !== 'cv/Syeda-Maliha-Tabassum-CV.pdf'));
+    .filter((p) => /\.(md|map|tex|docx?|py|ts)$/i.test(p) || (p.endsWith('.pdf') && !allowedPdf(p)));
   assert.deepEqual(unexpected, []);
 });
 

@@ -32,3 +32,7 @@ Thumbs.db
 # Original photos (only the processed versions in src/assets/ ship)
 /Formal picture in suit.jpg
 /890187627_2338880053541560_6729595351594943307_n.jpg
+
+# Original pictures, reports and videos supplied by the owner (processed copies
+# live in src/assets and public/media; reports contain student IDs)
+/Pictures/

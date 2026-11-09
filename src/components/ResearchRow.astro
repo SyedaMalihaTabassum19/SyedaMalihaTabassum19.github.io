@@ -1,21 +1,29 @@
 ---
-// One research entry as an editorial row with an inline, expandable details
-// panel. `feature` renders the published paper prominently with its citation.
+// One research entry.
+//   feature — the featured published paper: a glass card with citation, DOI
+//             and an illustration
+//   row     — everything else: a numbered row in a ruled "ledger" with a
+//             lifecycle track (Research → Submitted → Peer review → Published)
+//             showing where the work stands, and an inline details panel.
 // Deep link: #research-<id> (the panel opens automatically).
 import AuthorList from './AuthorList.astro';
 import CitationBlock from './CitationBlock.astro';
 import Icon from './Icon.astro';
 import StatusBadge from './StatusBadge.astro';
+import TopicGlyph from './TopicGlyph.astro';
 import { labelFor, researchStatuses, researchTopics, researchTypes } from '@/data/taxonomy';
 import type { Research } from '@/lib/content';
 import { withBase } from '@/lib/url';
 
 interface Props {
   entry: Research;
-  feature?: boolean;
+  variant?: 'feature' | 'row';
+  /** Position in its list (0-based); shown as the row number. */
+  index?: number;
 }
 
-const { entry, feature = false } = Astro.props;
+const { entry, variant = 'row', index = 0 } = Astro.props;
+const feature = variant === 'feature';
 const d = entry.data;
 const anchor = `research-${entry.id}`;
 const panelId = `${anchor}-details`;
@@ -28,67 +36,102 @@ const doiLink = d.links.find((l) => l.kind === 'doi');
 const otherLinks = d.links.filter((l) => l.kind !== 'doi');
 const statusNote = researchStatuses.find((s) => s.id === d.status)?.note;
 const when = d.year ? String(d.year) : d.status === 'in-progress' ? 'Ongoing' : 'Submitted';
+const topic = d.topics[0];
+
+// Lifecycle position: which stage is current (earlier ones are complete).
+const stages = ['Research', 'Submitted', 'Peer review', 'Published'];
+const current = ({ 'in-progress': 0, 'under-review': 2, accepted: 3, published: 3 } as Record<string, number>)[d.status] ?? 0;
+const number = String(index + 1).padStart(2, '0');
 ---
 
 <li
-  class:list={['row', { 'row--feature': feature }]}
+  class:list={['entry', `entry--${variant}`, { 'glass-card': feature }]}
   id={anchor}
   data-filter-item
   data-status={d.status}
   data-topic={d.topics.join(' ')}
   data-search={searchText}
   data-reveal
+  style={`--i:${index}`}
 >
-  <div class="meta">
-    <span class="when mono">{when}</span>
-    <StatusBadge status={d.status} />
-    <span class="type">{labelFor(researchTypes, d.type)}</span>
-  </div>
-
-  <div class="main">
-    {feature && <p class="eyebrow eyebrow--accent">Featured publication</p>}
-    <h4 class="title">{d.title}</h4>
-    {d.authors.length > 0 && <AuthorList authors={d.authors} />}
-    {venueLine && <p class="venue">{venueLine}</p>}
-    {
-      d.submittedTo && (
-        <p class="venue">
-          Submitted to <strong>{d.submittedTo}</strong> — under review
-        </p>
-      )
-    }
-    {feature && <p class="summary">{d.summary}</p>}
-    <ul class="chip-list" aria-label="Topics">
-      {d.topics.map((t) => <li class="chip">{labelFor(researchTopics, t)}</li>)}
-    </ul>
-
-    {
-      feature && (
-        <div class="feature-actions">
-          {doiLink && (
-            <a class="btn btn--primary btn--small" href={doiLink.url} target="_blank" rel="noopener noreferrer">
-              Read via DOI <Icon name="arrow-up-right" />
-              <span class="visually-hidden">(opens in a new tab)</span>
-            </a>
-          )}
-        </div>
-      )
-    }
-    {feature && d.citation && <CitationBlock id={entry.id} citation={d.citation} bibtex={d.bibtex} />}
-  </div>
-
   {
-    !feature && (
+    feature ? (
       <>
+        <div class="shell">
+          <div class="main">
+            <div class="meta">
+              <span class="when mono">{when}</span>
+              <StatusBadge status={d.status} />
+              <span class="type">{labelFor(researchTypes, d.type)}</span>
+            </div>
+            <p class="eyebrow eyebrow--accent">Featured publication</p>
+            <h4 class="title">{d.title}</h4>
+            {d.authors.length > 0 && <AuthorList authors={d.authors} />}
+            {venueLine && <p class="venue">{venueLine}</p>}
+            <p class="summary">{d.summary}</p>
+            <ul class="chip-list" aria-label="Topics">
+              {d.topics.map((t) => (
+                <li class="chip">{labelFor(researchTopics, t)}</li>
+              ))}
+            </ul>
+            {doiLink && (
+              <div class="feature-actions">
+                <a class="btn btn--primary btn--small" href={doiLink.url} target="_blank" rel="noopener noreferrer">
+                  Read via DOI <Icon name="arrow-up-right" />
+                  <span class="visually-hidden">(opens in a new tab)</span>
+                </a>
+              </div>
+            )}
+          </div>
+          <div class="visual">
+            <TopicGlyph topic={topic} size="lg" />
+          </div>
+        </div>
+        {d.citation && <CitationBlock id={entry.id} citation={d.citation} bibtex={d.bibtex} />}
+      </>
+    ) : (
+      <>
+        <span class="num mono" aria-hidden="true">
+          {number}
+        </span>
+
+        <div class="main">
+          <p class="kicker mono">
+            {labelFor(researchTypes, d.type)}
+            {d.submittedTo && (
+              <>
+                {' '}
+                · Submitted to <span class="to">{d.submittedTo}</span>
+              </>
+            )}
+          </p>
+          <h4 class="title">{d.title}</h4>
+          <ul class="topics" aria-label="Topics">
+            {d.topics.map((t) => (
+              <li>{labelFor(researchTopics, t)}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="stage">
+          <StatusBadge status={d.status} />
+          <ul class="life" aria-label="Stage">
+            {stages.map((s, i) => (
+              <li class:list={{ done: i < current, now: i === current }} aria-current={i === current ? 'step' : undefined}>
+                <span class="visually-hidden">
+                  {s}
+                  {i < current ? ' (done)' : i === current ? ' (current)' : ''}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p class="life-label mono" aria-hidden="true">
+            {stages[current]}
+          </p>
+        </div>
+
         <div class="action">
-          <button
-            class="toggle"
-            type="button"
-            aria-expanded="true"
-            aria-controls={panelId}
-            data-expander-toggle
-            hidden
-          >
+          <button class="toggle" type="button" aria-expanded="true" aria-controls={panelId} data-expander-toggle hidden>
             <span data-label-open="Hide details" data-label-closed="Details">
               Hide details
             </span>
@@ -111,7 +154,7 @@ const when = d.year ? String(d.year) : d.status === 'in-progress' ? 'Ongoing' : 
                 <p>
                   {d.status === 'under-review' ? (
                     <>
-                      Submitted to <em>{d.submittedTo}</em> and under peer review. It has not been accepted.
+                      Submitted to <em>{d.submittedTo}</em> and under peer review.
                     </>
                   ) : (
                     statusNote
@@ -143,74 +186,163 @@ const when = d.year ? String(d.year) : d.status === 'in-progress' ? 'Ongoing' : 
 </li>
 
 <style>
-  .row {
-    display: grid;
-    grid-template-columns: 11rem minmax(0, 1fr) auto;
-    gap: var(--s-1) var(--s-4);
-    padding-block: var(--s-4);
-    border-top: 1px solid var(--border);
+  .entry {
+    position: relative;
     scroll-margin-top: calc(var(--header-h) + 1rem);
-  }
-
-  .meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
-    padding-top: 0.2rem;
-  }
-
-  .when {
-    font-size: var(--step-0);
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .type {
-    font-size: var(--step--1);
-    color: var(--muted);
-  }
-
-  .main {
-    display: grid;
-    gap: 0.55rem;
-    min-width: 0;
   }
 
   .title {
     font-size: var(--step-1);
-    line-height: 1.35;
+    font-weight: 700;
+    line-height: 1.3;
     max-width: 62ch;
-  }
-
-  .venue {
-    font-size: var(--step--1);
-    color: var(--text-2);
-  }
-
-  .venue strong {
     color: var(--text);
   }
 
-  .summary {
+  /* ── Ledger row ── */
+  .entry--row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) 13rem 7.5rem;
+    gap: 0.4rem var(--s-3);
+    align-items: start;
+    padding: var(--s-3) var(--s-2) var(--s-3) 0;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 250ms ease;
+  }
+
+  /* Accent rule that grows in on hover / when open */
+  .entry--row::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: var(--s-3);
+    bottom: var(--s-3);
+    width: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transition: transform 300ms var(--ease);
+  }
+
+  .entry--row:hover,
+  .entry--row:has([aria-expanded='true']) {
+    background: linear-gradient(90deg, var(--accent-soft), transparent 60%);
+  }
+
+  .entry--row:hover::before,
+  .entry--row:has([aria-expanded='true'])::before {
+    transform: scaleY(1);
+  }
+
+  /* Outlined row number */
+  .num {
+    padding-left: var(--s-2);
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--border-strong);
+    transition:
+      color 250ms ease,
+      -webkit-text-stroke-color 250ms ease;
+  }
+
+  .entry--row:hover .num,
+  .entry--row:has([aria-expanded='true']) .num {
+    color: var(--accent-text);
+    -webkit-text-stroke-color: transparent;
+  }
+
+  .entry--row .main {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .kicker {
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  .to {
     color: var(--text-2);
-    max-width: 68ch;
+  }
+
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .topics li + li::before {
+    content: '/';
+    margin-inline: 0.5rem;
+    color: var(--border-strong);
+  }
+
+  /* Lifecycle track */
+  .stage {
+    display: grid;
+    gap: 0.45rem;
+    padding-top: 0.15rem;
+  }
+
+  .life {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .life li {
+    height: 5px;
+    border-radius: 1px;
+    background: var(--border);
+  }
+
+  .life .done {
+    background: var(--border-strong);
+  }
+
+  .life .now {
+    background: var(--now, var(--accent));
+  }
+
+  .entry[data-status='under-review'] {
+    --now: var(--status-review);
+  }
+
+  .entry[data-status='in-progress'] {
+    --now: var(--status-progress);
+  }
+
+  .life-label {
+    font-size: var(--step--2);
+    color: var(--muted);
   }
 
   .action {
+    justify-self: end;
     padding-top: 0.1rem;
   }
 
   .toggle {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     min-height: 2.75rem;
-    padding: 0.35rem 0.4rem 0.35rem 0.9rem;
-    border: 1px solid var(--border-strong);
+    padding: 0.35rem 0.4rem 0.35rem 0.8rem;
+    border: 1px solid var(--border);
     border-radius: var(--radius-s);
     background: transparent;
-    color: var(--text);
+    color: var(--text-2);
     font-weight: 700;
     font-size: var(--step--1);
     white-space: nowrap;
@@ -232,10 +364,9 @@ const when = d.year ? String(d.year) : d.status === 'in-progress' ? 'Ongoing' : 
   .details-body {
     display: grid;
     gap: var(--s-3);
-    margin-top: var(--s-2);
+    margin-top: var(--s-1);
     padding: var(--s-3);
-    border-left: 2px solid var(--accent);
-    border-radius: 0 var(--radius) var(--radius) 0;
+    border-radius: var(--radius);
     background: var(--surface);
   }
 
@@ -277,20 +408,57 @@ const when = d.year ? String(d.year) : d.status === 'in-progress' ? 'Ongoing' : 
     height: 1em;
   }
 
-  /* Featured published paper */
-  .row--feature {
-    grid-template-columns: 11rem minmax(0, 1fr);
-    margin-bottom: var(--s-2);
+  /* ── Feature (published) ── */
+  .entry--feature {
+    display: grid;
+    gap: var(--s-3);
     padding: var(--s-4);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: var(--radius-l);
-    background: var(--surface);
+    border-radius: 22px;
   }
 
-  .row--feature .title {
+  .entry--feature .shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: var(--s-4);
+    align-items: stretch;
+  }
+
+  .entry--feature .main {
+    display: grid;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.9rem;
+  }
+
+  .when,
+  .type {
+    font-size: var(--step--1);
+    color: var(--muted);
+  }
+
+  .entry--feature .title {
     font-size: var(--step-2);
     line-height: 1.25;
+  }
+
+  .venue {
+    font-size: var(--step--1);
+    color: var(--text-2);
+  }
+
+  .summary {
+    color: var(--text-2);
+    max-width: 68ch;
+  }
+
+  .visual {
+    min-height: 15rem;
   }
 
   .feature-actions {
@@ -300,13 +468,12 @@ const when = d.year ? String(d.year) : d.status === 'in-progress' ? 'Ongoing' : 
     margin-top: var(--s-1);
   }
 
-  .row--feature :global(.citation) {
-    margin-top: var(--s-1);
+  .entry--feature :global(.citation) {
     background: var(--bg);
   }
 
-  .row:target,
-  .row:has(:target) {
+  .entry:target,
+  .entry:has(:target) {
     animation: flash 1.6s var(--ease);
   }
 
@@ -316,31 +483,66 @@ const when = d.year ? String(d.year) : d.status === 'in-progress' ? 'Ongoing' : 
     }
   }
 
-  @media (max-width: 52rem) {
-    .row,
-    .row--feature {
-      grid-template-columns: minmax(0, 1fr);
+  @media (max-width: 60rem) {
+    .entry--row {
+      grid-template-columns: 3.5rem minmax(0, 1fr) auto;
     }
 
-    .meta {
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.4rem 1rem;
-    }
-
-    .details {
-      grid-column: 1;
+    .stage {
+      grid-column: 2;
+      grid-row: 2;
+      max-width: 16rem;
     }
 
     .action {
-      padding-top: var(--s-1);
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: start;
+    }
+
+    .num {
+      font-size: var(--step-2);
+    }
+  }
+
+  @media (max-width: 52rem) {
+    .entry--feature .shell {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .visual {
+      min-height: 11rem;
+    }
+
+    .visual :global(.glyph--lg) {
+      --k: 1.6;
+      min-height: 11rem;
     }
   }
 
   @media (max-width: 40rem) {
-    .row--feature {
+    .entry--feature {
       padding: var(--s-3);
+    }
+
+    .entry--row {
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      padding-right: 0;
+    }
+
+    .num {
+      padding-left: 0.5rem;
+      font-size: var(--step-1);
+    }
+
+    .stage,
+    .action {
+      grid-column: 2;
+      grid-row: auto;
+    }
+
+    .details {
+      grid-column: 1 / -1;
     }
   }
 </style>

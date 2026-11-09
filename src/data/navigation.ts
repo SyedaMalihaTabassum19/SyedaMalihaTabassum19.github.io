@@ -15,12 +15,14 @@ export const sections: NavItem[] = [
   { label: 'Projects', id: 'projects', primary: true },
   { label: 'Experience', id: 'experience', primary: true },
   { label: 'Education', id: 'education', primary: false },
+  { label: 'Awards', id: 'recognition', primary: true },
   { label: 'Contact', id: 'contact', primary: true },
 ];
 
 /**
  * Which desktop nav item lights up while a section is in view.
- * Education has no desktop item, so it highlights Experience.
+ * Education has no desktop item, so it highlights Experience until the
+ * Recognition part of that section (Awards) is reached.
  */
 export const navTargetFor: Record<string, string> = {
   education: 'experience',

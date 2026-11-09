@@ -8,23 +8,31 @@ import Icon from './Icon.astro';
 interface Props {
   images: { src: ImageMetadata; alt: string; caption?: string }[];
   label: string;
+  /** Small square thumbnails in a row (e.g. inside a timeline entry). */
+  compact?: boolean;
 }
 
-const { images, label } = Astro.props;
+const { images, label, compact = false } = Astro.props;
 const large = await Promise.all(images.map((img) => getImage({ src: img.src, width: 1800, format: 'webp' })));
 ---
 
 <div class="gallery" data-gallery>
-  <ul class:list={['thumbs', { single: images.length === 1 }]} aria-label={label}>
+  <ul class:list={['thumbs', { single: images.length === 1 && !compact, compact }]} aria-label={label}>
     {
       images.map((img, i) => (
         <li>
           <figure>
             <a href={large[i].src} data-gallery-item data-caption={img.caption ?? ''} data-alt={img.alt}>
-              <Image src={img.src} alt={img.alt} widths={[480, 800, 1200]} sizes="(max-width: 48rem) 100vw, 50vw" loading="lazy" />
+              <Image
+                src={img.src}
+                alt={img.alt}
+                widths={compact ? [240, 480] : [480, 800, 1200]}
+                sizes={compact ? '10rem' : '(max-width: 48rem) 100vw, 50vw'}
+                loading="lazy"
+              />
               <span class="visually-hidden">Open larger image</span>
             </a>
-            {img.caption && <figcaption>{img.caption}</figcaption>}
+            {img.caption && !compact && <figcaption>{img.caption}</figcaption>}
           </figure>
         </li>
       ))
@@ -70,6 +78,22 @@ const large = await Promise.all(images.map((img) => getImage({ src: img.src, wid
 
   .thumbs.single {
     grid-template-columns: 1fr;
+  }
+
+  .thumbs.compact {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 7.5rem), 1fr));
+    gap: 0.6rem;
+  }
+
+  .thumbs.compact a {
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px -16px rgb(0 0 0 / 0.7);
+  }
+
+  .thumbs.compact :global(img) {
+    height: 100%;
+    object-fit: cover;
   }
 
   .thumbs a {
